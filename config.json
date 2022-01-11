@@ -1,0 +1,17 @@
+{
+    "debug": true,
+    "server": {
+        "address": ":5000"
+    },
+    "context": {
+        "timeout": 2
+    },
+    "database": {
+        "host": "psql",
+        "port": "5524",
+        "user": "postgres",
+        "pass": "docker",
+        "name": "forum"
+    }
+
+}
