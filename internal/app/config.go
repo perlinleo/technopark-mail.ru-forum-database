@@ -1,4 +1,4 @@
-package forumApp
+package app
 
 import (
 	"fmt"
