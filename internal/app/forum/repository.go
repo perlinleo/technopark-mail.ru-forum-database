@@ -1,6 +1,6 @@
 package forum
 
-import "../../model"
+import "github.com/perlinleo/technopark-mail.ru-forum-database/internal/model"
 
 type Repository interface {
 	Create(forum *model.Forum) error
