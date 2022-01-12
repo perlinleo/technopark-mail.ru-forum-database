@@ -1,4 +1,4 @@
-module forum
+module github.com/perlinleo/technopark-mail.ru-forum-database
 
 go 1.17
 

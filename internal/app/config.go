@@ -44,8 +44,9 @@ func NewConfig() *Config {
 
 	appPort := viper.GetString(`server.address`)
 
-	connection := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPass, dbHost, dbPort, dbName)
-	
+	connection := fmt.Sprintf(
+		"host=%s dbname=%s sslmode=disable port=%s password=%s user=%s",
+		 dbHost, dbName, dbPort, dbPass, dbUser)
 	return &Config{
 		DB : &DataBaseConfig{
 			host: dbHost,

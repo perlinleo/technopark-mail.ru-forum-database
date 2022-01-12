@@ -34,12 +34,12 @@ func NewRouter() (*router.Router) {
 }
 
 func NewDataBase(connectionString string) (*pgx.ConnPool, error){
+	fmt.Println(connectionString)
 	pgxConn, err := pgx.ParseConnectionString(connectionString)
 	if err != nil{
 		return nil, err
 	}
 	pgxConn.PreferSimpleProtocol = true
-	
 	config := pgx.ConnPoolConfig{
 		ConnConfig:     pgxConn,
 		MaxConnections: 100,
@@ -52,14 +52,11 @@ func NewDataBase(connectionString string) (*pgx.ConnPool, error){
 	if err != nil{
 		return nil, err
 	}
-
 	return connPool, nil
 
 }
 
 
 func (s *Server) ConfigurateServer(pgx.ConnPool) {
-	fmt.Println("configurating")
-
-
+	
 }

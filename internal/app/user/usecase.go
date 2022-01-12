@@ -1,9 +1,9 @@
 package user
 
-import "../../model"
+import "github.com/perlinleo/technopark-mail.ru-forum-database/internal/model"
 
 type Usecase interface {
-	CreateUser(user *model.User) ([]model.User, error)
+	CreateUser(user *model.User) (error)
 	Find(nickname string) (*model.User, error)
 	Update(user *model.User) (*model.User, error, int)
 }
