@@ -6,17 +6,11 @@ import (
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/user/delivery"
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/user/repository"
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/user/usecase"
-
+	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/middleware"
 	"github.com/valyala/fasthttp"
 )
 
 
-func applicationJSON(next fasthttp.RequestHandler) fasthttp.RequestHandler {
-	return func(ctx *fasthttp.RequestCtx) {
-		ctx.SetContentType("application/json")
-		next(ctx)
-	}
-}
 
 func Start() error {
 	config := NewConfig()
@@ -38,7 +32,7 @@ func Start() error {
 	delivery.NewUserHandler(server.Router, userUsecase)
 
 	fmt.Printf("STARTING SERVICE ON PORT %s\n", config.App.Port)
-	err = fasthttp.ListenAndServe(config.App.Port,applicationJSON(server.Router.Handler))
+	err = fasthttp.ListenAndServe(config.App.Port,middleware.ReponseMiddlwareAndLogger(server.Router.Handler))
 	if err != nil {
 		return err;
 	}

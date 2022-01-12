@@ -8,8 +8,8 @@ import (
 )
 
 
-func SendError(errorMessage error, ctx *fasthttp.RequestCtx) {
-	ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+func SendError(ctx *fasthttp.RequestCtx,errorMessage error, statusCode int) {
+	ctx.SetStatusCode(statusCode)
 	fmt.Printf("%s", errorMessage)
 }
 
@@ -18,7 +18,7 @@ func SendResponse(data interface{},ctx *fasthttp.RequestCtx,StatusCode int) {
 
 	serializedData, err := json.Marshal(data)
 	if err != nil {
-		SendError(err,ctx)
+		SendError(ctx,err,500)
 	}
 
 	ctx.SetBody(serializedData)
