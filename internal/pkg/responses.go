@@ -2,7 +2,6 @@ package responses
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/valyala/fasthttp"
 )
@@ -10,7 +9,6 @@ import (
 
 func SendError(ctx *fasthttp.RequestCtx,errorMessage error, statusCode int) {
 	ctx.SetStatusCode(statusCode)
-	fmt.Printf("%s", errorMessage)
 }
 
 func SendResponse(data interface{},ctx *fasthttp.RequestCtx,StatusCode int) {

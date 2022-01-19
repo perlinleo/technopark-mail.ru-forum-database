@@ -1,8 +1,6 @@
-package repository
+package user_psql
 
 import (
-	"fmt"
-
 	"github.com/jackc/pgx"
 	cache "github.com/patrickmn/go-cache"
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/user"
@@ -23,7 +21,6 @@ func NewUserPSQLRepository(ConnectionPool *pgx.ConnPool, Cache *cache.Cache) use
 func (userRep *UserPSQL) Create(user *model.User) error {
 	query := "INSERT INTO users (nickname, email, about, fullname) "+
 			"VALUES ($1, $2, $3, $4) RETURNING nickname"
-	fmt.Printf("%v\n\n",user.Nickname)
 	_, err := userRep.Conn.Exec(
 		query, user.Nickname, user.Email, user.About, user.Fullname,)
 	
@@ -43,10 +40,8 @@ func (userRep *UserPSQL) FindByNickname(nickname string) (*model.User, error) {
 			&userObj.Email,
 			&userObj.Fullname,
 		); err != nil {
-			fmt.Println(err)
 			return nil, err
 		}
-
 	return userObj, nil
 }
 
@@ -71,7 +66,7 @@ func (u *UserPSQL) Find(nickname string, email string) ([]model.User, error){
 	rows,err := u.Conn.Query(`SELECT nickname, about,email, fullname FROM users 
 		WHERE nickname = $1 OR email = $2`, nickname,email)
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
 	for rows.Next(){
 		obj := model.User{}

@@ -1,10 +1,13 @@
-package forum
+package thread
 
-import "../../model"
+import "github.com/perlinleo/technopark-mail.ru-forum-database/internal/model"
 
 type Repository interface {
-	Create(forum *model.Forum) error
-	Find(slug string) (*model.Forum, error)
-	FindForumUsers(forumObj *model.Forum, params map[string][]string) ([]model.User, error)
-	FindForumThreads(forumSlug string, params map[string][]string) ([]model.Thread, error)
+	CreateThread(thread *model.NewThread) (*model.Thread, error)
+	FindByIdOrSlug(id int, slug string) (*model.Thread, error)
+	CreatePosts(thread *model.Thread, posts []*model.Post) ([]*model.Post, error)
+	UpdateThread(id int, slug string, update *model.ThreadUpdate) (*model.Thread, error)
+	GetThreadPosts(thread *model.Thread, limit, desc, since, sort string) ([]model.Post, error)
+	Vote(thread *model.Thread, vote *model.Vote) (*model.Thread, error)
 }
+

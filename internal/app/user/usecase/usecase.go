@@ -1,4 +1,4 @@
-package usecase
+package user_usecase
 
 import (
 	"fmt"
@@ -27,11 +27,10 @@ func (u UserUsecase) CreateUser(user *model.User) ([]model.User, error) {
 
 func (u UserUsecase) DuplicateUser(user *model.User) ([]model.User, error) {
 	FoundedDuplicates, err := u.repository.Find(user.Nickname, user.Email)
+	fmt.Println(user.Nickname, user.Email)
 	if err != nil {
 		return nil, err;
 	}
-	fmt.Println("JDISJDSIJDSIJD")
-	fmt.Println(FoundedDuplicates)
 	
 	return FoundedDuplicates, nil
 }
@@ -48,12 +47,27 @@ func (u UserUsecase) Update(user *model.User) (*model.User, error, int) {
 	// 	return nil, err, 404
 	// }
 
-	userObj, err := u.repository.Update(user)
+	userObj, err := u.repository.FindByNickname(user.Nickname)
 
+	if err != nil || userObj == nil {
+		return nil, err, 404
+	}
+	
+	if user.Email == "" {
+		user.Email = userObj.Email
+	}
+	if user.About == "" {
+		user.About = userObj.About	
+	}
+	if user.Fullname == "" {
+		user.Fullname = userObj.Fullname
+	}
+
+	userObj, err = u.repository.Update(user)
+	
 	if err != nil {
 		return nil, err, 409
 	}
-
 	return userObj, err, 200
 }
 

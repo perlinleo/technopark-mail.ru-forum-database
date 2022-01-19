@@ -30,11 +30,12 @@ DROP TABLE IF EXISTS votes;
 
 CREATE TABLE IF NOT EXISTS users
 (
-    id       serial not null primary key,
-    nickname varchar(20) not null unique,
-    about    varchar(255),
-    email    varchar(20)  not null,
-    fullname varchar(50)   not null
+    id       bigserial not null primary key,
+    nickname citext COLLATE "POSIX" not null unique,
+    about    text,
+    email    citext  COLLATE "POSIX" not null unique,
+    fullname varchar(100)   not null
+    CHECK (nickname <> '' or email <> '' or about <> '')
 );
 
 -- CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_uindex
@@ -50,7 +51,7 @@ CREATE INDEX IF NOT EXISTS idx_users_pok
 
 CREATE TABLE IF NOT EXISTS forums
 (
-    id       serial not null primary key,
+    id       bigserial not null primary key,
     slug     citext   not null,
     userNick citext   not null,
     title    varchar,
@@ -96,9 +97,9 @@ CREATE INDEX IF NOT EXISTS idx_threads_created2
 
 CREATE TABLE IF NOT EXISTS posts
 (
-    id       serial not null primary key,
-    parent   int             DEFAULT NULL,
-    path     int[]  NOT NULL DEFAULT '{0}',
+    id       bigserial not null primary key,
+    parent   bigint             DEFAULT NULL,
+    path     bigint[]  NOT NULL DEFAULT '{0}',
     thread   int REFERENCES threads(id) NOT NULL,
     forum    citext,
     author   citext,
@@ -120,7 +121,7 @@ CREATE TABLE IF NOT EXISTS votes
 (
     nickname citext  REFERENCES users(nickname) NOT NULL,
     thread   int      REFERENCES threads(id) NOT NULL,
-    voice    smallint NOT NULL CHECK (voice = 1 OR voice = -1),
+    voice    smallint NOT NULL,
     PRIMARY KEY (nickname, thread)
 );
 -- CREATE UNIQUE INDEX IF NOT EXISTS idx_votes_nickname_thread_unique
@@ -167,8 +168,8 @@ CREATE TRIGGER on_vote_update
 
 
 CREATE TABLE IF NOT EXISTS forum_users (
-    user_id INT REFERENCES users(id),
-    forum_id INT REFERENCES forums(id)
+    user_id BIGINT REFERENCES users(id),
+    forum_id BIGINT REFERENCES forums(id)
 );
 
 CREATE INDEX idx_forum_users_user_id
@@ -204,3 +205,8 @@ CLUSTER users USING users_nickname_key;
 CLUSTER threads USING idx_threads_created2;
 CLUSTER forums USING idx_forums_slug_uindex2;
 CLUSTER posts USING idx_posts_thread_id;
+
+
+select * from users;
+
+select * from forums;

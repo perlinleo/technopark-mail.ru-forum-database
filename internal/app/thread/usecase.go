@@ -1,11 +1,11 @@
-package forum
+package thread
 
-import "../../model"
+import "github.com/perlinleo/technopark-mail.ru-forum-database/internal/model"
 
 type Usecase interface {
-	NewForum(*model.Forum) (*model.Forum, int, error)
-	FindForum(*model.Forum) (*model.Forum, int, error)
-	UsersByForum(forumString string, params map[string][]string) ([]model.User, int, error)
-	ThreadsByForum(forumString string, params map[string][]string) ([]model.Thread, int, error)
-
+	CreatePosts(threadSlugOrId string, posts []*model.Post) ([]*model.Post, int, error)
+	FindByIdOrSlug(threadSlugOrId string) (*model.Thread, error)
+	UpdateThread(threadSlugOrId string, update *model.ThreadUpdate) (*model.Thread, error)
+	GetThreadPosts(threadSlugOrId string, limit string, desc bool, since string, sort string) ([]model.Post, error)
+	Vote(threadSlugOrId string, vote *model.Vote) (*model.Thread, error)
 }

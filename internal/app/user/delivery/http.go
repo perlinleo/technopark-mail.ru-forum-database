@@ -1,4 +1,4 @@
-package delivery
+package user_http
 
 import (
 	"encoding/json"
@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/fasthttp/router"
-	"github.com/jackc/pgx"
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/user"
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/middleware"
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/model"
@@ -34,7 +33,6 @@ func (h *UserHandler) HandleCreateUser(ctx *fasthttp.RequestCtx) {
 	
 
 	nickname := ctx.UserValue("nickname").(string)
-	fmt.Println(nickname)
 
 	newUser := new(model.User)
 	newUser.Nickname = nickname
@@ -46,23 +44,24 @@ func (h *UserHandler) HandleCreateUser(ctx *fasthttp.RequestCtx) {
 
 	users, err := h.UserUsecase.CreateUser(newUser)
 	if err != nil{
-		pgerr, _ := err.(pgx.PgError);
-		fmt.Println(pgerr.ConstraintName)
-
-			fmt.Println("POYMALI DOLBAEBA")
-			users,err = h.UserUsecase.DuplicateUser(newUser)
-			ctxBody, err := json.Marshal(users)
-			if err != nil{
-				fmt.Println("pohuy")
-			}
-			ctx.SetBody(ctxBody)
-			ctx.SetStatusCode(fasthttp.StatusConflict)
+		fmt.Println(err)
+		// pgerr, _ := err.(pgx.PgError);
+		users,err = h.UserUsecase.DuplicateUser(newUser)
+		if err != nil {
+			fmt.Println("alert blyat")
+		}
+		ctxBody, err := json.Marshal(users)
+		if err != nil{
+			responses.SendError(ctx, err , fasthttp.StatusConflict)
+		}
+		
+		ctx.SetBody(ctxBody)
+		ctx.SetStatusCode(fasthttp.StatusConflict)
+		
 		return
 	}
-	fmt.Println(users)
 	if users!=nil {
 		ctxBody, err := json.Marshal(users)
-		fmt.Println(users)
 		if err != nil {
 			responses.SendError(ctx,err, fasthttp.StatusInternalServerError)
 		}
@@ -74,7 +73,6 @@ func (h *UserHandler) HandleCreateUser(ctx *fasthttp.RequestCtx) {
 	if err != nil {
 		responses.SendError(ctx,err, fasthttp.StatusInternalServerError)
 	}
-	fmt.Println("hello")
 	ctx.SetStatusCode(fasthttp.StatusCreated)
 	
 }
@@ -82,29 +80,39 @@ func (h *UserHandler) HandleCreateUser(ctx *fasthttp.RequestCtx) {
 func (h *UserHandler) HandleGetUser(ctx *fasthttp.RequestCtx) {
 	nickname := ctx.UserValue("nickname").(string)
 	userObj, err := h.UserUsecase.Find(nickname)
-
-	if err != nil || userObj == nil {
-		responses.SendError(ctx,err, fasthttp.StatusNotFound)
-	}
 	ctx.SetStatusCode(http.StatusOK)
+	if err != nil || userObj == nil {
+		ctx.SetStatusCode(fasthttp.StatusNotFound)
+	}
+	
 	userBody,err := json.Marshal(userObj);
+	fmt.Println("helloss")
 	ctx.SetBody(userBody)
 }
 
 func (h *UserHandler) HandleUpdateUser(ctx *fasthttp.RequestCtx) {
+
 	nickname := ctx.UserValue("nickname").(string)
 	newUser := new(model.User)
+	
 	newUser.Nickname = nickname
 	err := json.Unmarshal(ctx.PostBody(), &newUser)
+	fmt.Println(newUser)
 	if err != nil {
-		fmt.Println(err)
+		responses.SendError(ctx, err, fasthttp.StatusInternalServerError)
 	}
-	newUser, err , _ = h.UserUsecase.Update(newUser)
+	newUser, err , code := h.UserUsecase.Update(newUser)
 	if err != nil {
 		fmt.Println(err)
+		responses.SendError(ctx, err, fasthttp.StatusConflict)
 	}
 	ctxBody, err := json.Marshal(newUser)
+	if err != nil {
+		responses.SendError(ctx, err, fasthttp.StatusInternalServerError)
+	}
 	ctx.SetBody(ctxBody)
+	ctx.SetStatusCode(code)
+	
 	// newUser.Nickname = nickname
 	// newUser, err, code := h.UserUsecase.Update(newUser)
 } 
