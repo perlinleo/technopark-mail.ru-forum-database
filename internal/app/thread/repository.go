@@ -9,5 +9,10 @@ type Repository interface {
 	UpdateThread(id int, slug string, update *model.ThreadUpdate) (*model.Thread, error)
 	GetThreadPosts(thread *model.Thread, limit, desc, since, sort string) ([]model.Post, error)
 	Vote(thread *model.Thread, vote *model.Vote) (*model.Thread, error)
+	FindPostId(id string, includeUser, includeForum, includeThread bool) (*model.PostFull, error)
+	UpdatePost(id string, message string) (*model.Post, error)
+	GetStatus() (*model.Status, error) 
+	ClearAll() error
+	
 }
 

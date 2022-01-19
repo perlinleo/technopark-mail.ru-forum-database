@@ -27,15 +27,15 @@ func NewThreadPSQLRepository(ConnectionPool *pgx.ConnPool, Cache *cache.Cache) t
 
 
 func (t ThreadPSQL) Vote(thread *model.Thread, vote *model.Vote) (*model.Thread, error) {
-	t.Conn.Exec("INSERT INTO votes(nickname, voice, thread) VALUES ($1, $2, $3) ON CONFLICT ON CONSTRAINT votes_pkey DO UPDATE SET voice = $2",
+	_ ,err := t.Conn.Exec("INSERT INTO votes(nickname, voice, thread) VALUES ($1, $2, $3) ON CONFLICT ON CONSTRAINT votes_pkey DO UPDATE SET voice = $2",
 	 vote.Nickname, vote.Voice, thread.ID)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	if err != nil {
+		return nil, err
+	}
 	var value int32;
 	fmt.Println(value)
 	fmt.Println(thread.ID)
-	err := t.Conn.QueryRow("SELECT votes FROM threads WHERE id = $1", thread.ID).Scan(	&value )
+	err = t.Conn.QueryRow("SELECT votes FROM threads WHERE id = $1", thread.ID).Scan(	&value )
 	fmt.Println(err)
 	fmt.Println(value)
 	thread.Votes = value;
@@ -348,4 +348,150 @@ func ReplaceSQL(old, searchPattern string) string {
 		old = strings.Replace(old, searchPattern, "$"+strconv.Itoa(m), 1)
 	}
 	return old
+}
+
+func (t ThreadPSQL) FindPostId(id string, includeUser, includeForum, includeThread bool) (*model.PostFull, error) {
+	postObj := &model.PostFull{}
+	postObj.Post = &model.Post{}
+
+	id2, _ := strconv.Atoi(id)
+
+	if x, found := t.Cache.Get("post_" + id); found {
+		postObj.Post = x.(*model.Post)
+	} else {
+		if err := t.Conn.QueryRow(
+			"SELECT author, created, forum, id, message, thread, isedited, parent FROM posts WHERE id = $1",
+			id2,
+		).Scan(
+			&postObj.Post.Author,
+			&postObj.Post.Created,
+			&postObj.Post.Forum,
+			&postObj.Post.ID,
+			&postObj.Post.Message,
+			&postObj.Post.Thread,
+			&postObj.Post.IsEdited,
+			&postObj.Post.Parent,
+		); err != nil {
+			return nil, err
+		}
+	}
+
+	if includeUser {
+		postObj.Author = &model.User{}
+
+		if x, found := t.Cache.Get(postObj.Post.Author); found {
+			postObj.Author = x.(*model.User)
+		} else {
+			if err := t.Conn.QueryRow(
+				"SELECT about, email, fullname, nickname FROM users WHERE nickname = $1",
+				postObj.Post.Author,
+			).Scan(
+				&postObj.Author.About,
+				&postObj.Author.Email,
+				&postObj.Author.Fullname,
+				&postObj.Author.Nickname,
+			); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if includeForum {
+		postObj.Forum = &model.Forum{}
+
+		if x, found := t.Cache.Get(postObj.Post.Forum); found {
+			postObj.Forum = x.(*model.Forum)
+		} else {
+			if err := t.Conn.QueryRow(
+				"SELECT usernick, title, slug, posts, threads FROM forums WHERE slug = $1",
+				postObj.Post.Forum,
+			).Scan(
+				&postObj.Forum.User,
+				&postObj.Forum.Title,
+				&postObj.Forum.Slug,
+				&postObj.Forum.Posts,
+				&postObj.Forum.Threads,
+			); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if includeThread {
+		postObj.Thread = &model.Thread{}
+
+		//if x, found := p.cache.Get("thread_"+fmt.Sprint(postObj.Post.Thread)); found {
+		//	postObj.Thread = x.(*model.Thread)
+		//} else {
+		if err := t.Conn.QueryRow(
+			"SELECT forum, slug, title, author, message, id, created, votes FROM threads WHERE id = $1",
+			postObj.Post.Thread,
+		).Scan(
+			&postObj.Thread.Forum,
+			&postObj.Thread.Slug,
+			&postObj.Thread.Title,
+			&postObj.Thread.Author,
+			&postObj.Thread.Message,
+			&postObj.Thread.ID,
+			&postObj.Thread.Created,
+			&postObj.Thread.Votes,
+		); err != nil {
+			return nil, err
+		}
+		//}
+	}
+
+	return postObj, nil
+}
+
+
+func (t ThreadPSQL) UpdatePost(id string, message string) (*model.Post, error) {
+	postObj := &model.Post{}
+
+	id2, _ := strconv.Atoi(id)
+
+	if err := t.Conn.QueryRow(
+		"UPDATE posts SET message = $2, isEdited = TRUE WHERE id = $1 RETURNING author, created, forum, id, message, thread, isEdited",
+		id2,
+		message,
+	).Scan(
+		&postObj.Author,
+		&postObj.Created,
+		&postObj.Forum,
+		&postObj.ID,
+		&postObj.Message,
+		&postObj.Thread,
+		&postObj.IsEdited,
+	); err != nil {
+		return nil, err
+	}
+
+	t.Cache.Set("post_"+id, postObj, cache.DefaultExpiration)
+
+	return postObj, nil
+}
+
+
+func (t ThreadPSQL) ClearAll() error {
+	if _, err := t.Conn.Exec("TRUNCATE votes, users, posts, threads, forums RESTART IDENTITY CASCADE"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t ThreadPSQL) GetStatus() (*model.Status, error) {
+	status := &model.Status{}
+
+	//mb cringe
+	if err := t.Conn.QueryRow("SELECT "+
+		"(SELECT count(*) from forums) AS forum, "+
+		"(SELECT count(*) from posts) AS post, "+
+		"(SELECT count(*) from threads) AS thread, "+
+		"(SELECT count(*) from users) AS user",
+	).Scan(&status.Forum, &status.Post, &status.Thread, &status.User); err != nil {
+		return nil, err
+	}
+
+	return status, nil
 }

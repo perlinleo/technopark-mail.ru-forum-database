@@ -46,17 +46,18 @@ func (f ForumUsecase) CreateForum(data *model.Forum) (*model.Forum, int, error){
 func (f ForumUsecase) Find(slug string) (*model.Forum, error){
 	var forumObj *model.Forum
 	var err error
-
-	fromCache, found := f.Cache.Get(slug)
-	if !found {
-		forumObj, err = f.repositoryForum.Find(slug)
+	forumObj, err = f.repositoryForum.Find(slug)
 		if err != nil {
 			return nil, err
 		}
 		f.Cache.Set(slug, forumObj, cache.DefaultExpiration)
-	} else {
-		forumObj = fromCache.(*model.Forum)
-	}
+	// fromCache, found := f.Cache.Get(slug)
+	// if !found {
+		
+	// } else {
+	// 	fmt.Println("USING CACHE")
+	// 	forumObj = fromCache.(*model.Forum)
+	// }
 
 	return forumObj, nil
 }

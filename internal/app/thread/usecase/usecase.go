@@ -6,6 +6,7 @@ import (
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/thread"
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/user"
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/model"
+	"github.com/pkg/errors"
 )
 
 type ThreadUsecase struct {
@@ -148,4 +149,70 @@ func makeTree(posts []model.Post) []model.Post {
 	}
 
 	return tree
+}
+
+
+func (t ThreadUsecase) FindPostId(id string, includeUser bool,includeForum bool, includeThread bool) (*model.PostFull, error) {
+	
+	
+
+	postObj, err := t.threadRep.FindPostId(id, includeUser, includeForum, includeThread)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "postRep.FindById()")
+	}
+
+	return postObj, nil
+}
+
+
+func contains(arr []string, str string) bool {
+	for _, a := range arr {
+		if a == str {
+			return true
+		}
+	}
+
+	return false
+}
+
+
+func (t ThreadUsecase) UpdatePost(id string, message string) (*model.Post, error) {
+	postFullObj, err := t.threadRep.FindPostId(id, false, false, false)
+	if err != nil {
+		return nil, errors.Wrap(err, "postRep.FindById()")
+	}
+
+	if message=="" || postFullObj.Post.Message == message {
+		return postFullObj.Post, nil
+	}
+
+	postObj, err := t.threadRep.UpdatePost(id, message)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "postRep.Update()")
+	}
+
+	return postObj, nil
+}
+
+
+func (t ThreadUsecase) ClearAll() error {
+	err := t.threadRep.ClearAll()
+
+	if err != nil {
+		return errors.Wrap(err, "ClearAll()")
+	}
+
+	return nil
+}
+
+func (t ThreadUsecase) GetStatus() (*model.Status, error) {
+	status, err := t.threadRep.GetStatus()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "GetStatus()")
+	}
+
+	return status, nil
 }
