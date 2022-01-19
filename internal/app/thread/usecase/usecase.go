@@ -159,6 +159,7 @@ func (t ThreadUsecase) FindPostId(id string, includeUser bool,includeForum bool,
 	postObj, err := t.threadRep.FindPostId(id, includeUser, includeForum, includeThread)
 
 	if err != nil {
+		
 		return nil, errors.Wrap(err, "postRep.FindById()")
 	}
 

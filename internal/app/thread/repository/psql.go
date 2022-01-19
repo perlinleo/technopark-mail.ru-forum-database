@@ -33,11 +33,7 @@ func (t ThreadPSQL) Vote(thread *model.Thread, vote *model.Vote) (*model.Thread,
 		return nil, err
 	}
 	var value int32;
-	fmt.Println(value)
-	fmt.Println(thread.ID)
 	err = t.Conn.QueryRow("SELECT votes FROM threads WHERE id = $1", thread.ID).Scan(	&value )
-	fmt.Println(err)
-	fmt.Println(value)
 	thread.Votes = value;
 	t.Cache.Delete(thread.Slug)
 	return thread , nil

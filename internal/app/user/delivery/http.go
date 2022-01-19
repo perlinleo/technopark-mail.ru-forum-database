@@ -2,7 +2,6 @@ package user_http
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/fasthttp/router"
@@ -44,11 +43,9 @@ func (h *UserHandler) HandleCreateUser(ctx *fasthttp.RequestCtx) {
 
 	users, err := h.UserUsecase.CreateUser(newUser)
 	if err != nil{
-		fmt.Println(err)
 		// pgerr, _ := err.(pgx.PgError);
 		users,err = h.UserUsecase.DuplicateUser(newUser)
 		if err != nil {
-			fmt.Println("alert blyat")
 		}
 		ctxBody, err := json.Marshal(users)
 		if err != nil{
@@ -86,7 +83,6 @@ func (h *UserHandler) HandleGetUser(ctx *fasthttp.RequestCtx) {
 	}
 	
 	userBody,err := json.Marshal(userObj);
-	fmt.Println("helloss")
 	ctx.SetBody(userBody)
 }
 
@@ -97,13 +93,11 @@ func (h *UserHandler) HandleUpdateUser(ctx *fasthttp.RequestCtx) {
 	
 	newUser.Nickname = nickname
 	err := json.Unmarshal(ctx.PostBody(), &newUser)
-	fmt.Println(newUser)
 	if err != nil {
 		responses.SendError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 	newUser, err , code := h.UserUsecase.Update(newUser)
 	if err != nil {
-		fmt.Println(err)
 		responses.SendError(ctx, err, fasthttp.StatusConflict)
 	}
 	ctxBody, err := json.Marshal(newUser)

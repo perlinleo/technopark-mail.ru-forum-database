@@ -2,7 +2,6 @@ package forum_http
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/fasthttp/router"
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/forum"
@@ -31,7 +30,6 @@ func NewForumHandler(router *router.Router,usecase forum.Usecase) {
 func (h *ForumHandler) CreateForum(ctx *fasthttp.RequestCtx) {
 	newForum := new(model.Forum)
 	err := json.Unmarshal(ctx.PostBody(), &newForum)
-	fmt.Println(newForum)
 	if err != nil {
 		responses.SendError(ctx,err, fasthttp.StatusInternalServerError)
 		return
@@ -72,15 +70,12 @@ func (h *ForumHandler) CreateThread(ctx *fasthttp.RequestCtx) {
 	}
 	ctx.SetBody(ctx.PostBody())
 	threadObj, code, err := h.ForumUsecase.CreateThread(slug, newThread)
-	fmt.Println(err)
-	fmt.Println(code)
 	// if code == http.StatusNotFound {
 	// 	responses.SendError(ctx, err, fasthttp.StatusNotFound)
 	// 	return
 	// }
 	ctxBody , err:= json.Marshal(threadObj)
 	if err == nil {
-		fmt.Println("dsdsds")
 		ctx.SetBody(ctxBody)
 	}
 		// if err != nil {
@@ -98,7 +93,6 @@ func (h *ForumHandler) GetDetails(ctx *fasthttp.RequestCtx) {
 	slug := ctx.UserValue("slug").(string)
 	forumObj, err := h.ForumUsecase.Find(slug)
 	if err != nil || forumObj == nil {
-		fmt.Println("404")
 		responses.SendError(ctx,err, fasthttp.StatusNotFound)
 		response := map[string]string{"message": "Can`t find threads for forum slug"}
 		ctxBody, _ := json.Marshal(response)
@@ -107,7 +101,6 @@ func (h *ForumHandler) GetDetails(ctx *fasthttp.RequestCtx) {
 
 		return
 	}
-	fmt.Println(forumObj)
 	ctxBody , err:= json.Marshal(forumObj)
 	ctx.SetBody(ctxBody)
 	ctx.SetStatusCode(fasthttp.StatusOK)

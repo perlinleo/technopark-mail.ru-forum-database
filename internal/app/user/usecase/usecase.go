@@ -1,8 +1,6 @@
 package user_usecase
 
 import (
-	"fmt"
-
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/user"
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/model"
 )
@@ -27,7 +25,6 @@ func (u UserUsecase) CreateUser(user *model.User) ([]model.User, error) {
 
 func (u UserUsecase) DuplicateUser(user *model.User) ([]model.User, error) {
 	FoundedDuplicates, err := u.repository.Find(user.Nickname, user.Email)
-	fmt.Println(user.Nickname, user.Email)
 	if err != nil {
 		return nil, err;
 	}

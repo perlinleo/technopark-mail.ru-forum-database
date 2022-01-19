@@ -2,7 +2,6 @@ package thread_http
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/fasthttp/router"
@@ -42,7 +41,6 @@ func (h *ThreadHandler) HandleCreatePosts(ctx *fasthttp.RequestCtx) {
 	err := json.Unmarshal(ctx.PostBody(), &newPosts)
 	
 	if err != nil {
-		fmt.Println(err)
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
@@ -56,7 +54,6 @@ func (h *ThreadHandler) HandleCreatePosts(ctx *fasthttp.RequestCtx) {
 		// if string(err.Error()) == "Parent post was created in another thread" {
 			
 		// }
-		fmt.Println(err)
 		if string(err.Error()) == "404" {
 			response := map[string]string{"message": "Can't find post author by nickname: "}
 			ctxBody, _ := json.Marshal(response)
@@ -65,15 +62,12 @@ func (h *ThreadHandler) HandleCreatePosts(ctx *fasthttp.RequestCtx) {
 			return
 		}
 		if string(err.Error()) == "no rows in result set" && code!= 409 {
-			fmt.Println("???")
-			fmt.Println(code)
 			response := map[string]string{"message": "Can't find post thread by id: 2139800939"}
 			ctxBody, _ := json.Marshal(response)
 			ctx.SetBody(ctxBody)
 			ctx.SetStatusCode(fasthttp.StatusNotFound)
 			return
 		}
-		fmt.Println("!!!")
 		response := map[string]string{"message": "Parent post was created in another thread"}
 		ctxBody, _ := json.Marshal(response)
 		ctx.SetBody(ctxBody)
@@ -100,7 +94,6 @@ func (h *ThreadHandler) HandleGetThreadDetails(ctx *fasthttp.RequestCtx) {
 	threadObj, err := h.ThreadUsecase.FindByIdOrSlug(slug)
 	
 	if err != nil {
-		fmt.Println(err)
 		// mb kringe
 		response := map[string]string{"message": "Can't find user by nickname:  "}
 		ctxBody, _ := json.Marshal(response)
@@ -127,14 +120,12 @@ func (h *ThreadHandler) HandleUpdateThreadDetails(ctx *fasthttp.RequestCtx) {
 	err := json.Unmarshal(ctx.PostBody(), &thread)
 	
 	if err != nil {
-		fmt.Println(err)
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
 	threadObj, err := h.ThreadUsecase.UpdateThread(slug, thread)
 	if err != nil {
 		// mb kringe
-		fmt.Println(err)
 		response := map[string]string{"message": "Can't find user by nickname:  "}
 		ctxBody, _ := json.Marshal(response)
 		ctx.SetBody(ctxBody)
@@ -262,8 +253,6 @@ func contains(arr []string, str string) bool {
 func (h *ThreadHandler) HandleGetPostDetails(ctx *fasthttp.RequestCtx) {
 	id := ctx.UserValue("id").(string)
 	args := ctx.QueryArgs()
-	fmt.Println(args)
-	fmt.Println(id)
 	var includeUser bool
 	var includeForum bool
 	var includeThread bool
@@ -282,15 +271,12 @@ func (h *ThreadHandler) HandleGetPostDetails(ctx *fasthttp.RequestCtx) {
 		}
 	}
 	postObj, err := h.ThreadUsecase.FindPostId(id,includeUser,includeForum,includeThread)
-	fmt.Println(err)
-	fmt.Println(postObj)
-	// fmt.Println(postObj.Author == nil)
-	fmt.Println("___________")
 	if err != nil || postObj == nil  {
 		// respond.Error(w, r, http.StatusNotFound, errors.New("Can't find post with id "+id+"\n"))
 		// mb kringe
-		fmt.Println(err)
+		
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
+		
 		response := map[string]string{"message": "Can't find user by nickname:  "}
 		ctxBody, _ := json.Marshal(response)
 		ctx.SetBody(ctxBody)
