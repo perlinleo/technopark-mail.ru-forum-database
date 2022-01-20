@@ -31,4 +31,4 @@ COPY --from=build /app/main/ .
 
 EXPOSE 5000
 ENV PGPASSWORD password
-CMD service postgresql start && psql -h localhost -d forum -U postgres -p 5432 -a -q -f ./sql/dump.sql && ./main
+CMD service postgresql start && psql -h localhost -d forum -U postgres -p 5432 -a -q -f ./db/db.sql && ./main

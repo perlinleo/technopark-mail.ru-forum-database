@@ -1,1 +1,0 @@
-SELECT nickname, about, email, fullname FROM users WHERE email = $1 OR nickname = $2;

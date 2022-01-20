@@ -1,1 +1,0 @@
-UPDATE forums SET threads = threads + 1 WHERE slug = $1 RETURNING slug, title, usernick, posts, threads, id

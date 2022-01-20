@@ -1,1 +1,0 @@
-TRUNCATE votes, users, posts, threads, forums RESTART IDENTITY CASCADE;

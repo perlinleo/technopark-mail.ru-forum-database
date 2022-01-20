@@ -1,1 +1,0 @@
-SELECT slug, title, usernick, posts, threads, id FROM forums WHERE slug = $1;
