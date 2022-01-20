@@ -5,6 +5,8 @@ import (
 
 	router "github.com/fasthttp/router"
 	"github.com/jackc/pgx"
+	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/middleware"
+	"github.com/valyala/fasthttp"
 )
 
 type Server struct {
@@ -12,7 +14,10 @@ type Server struct {
 	Config *Config
 }
 
-
+func Index(ctx *fasthttp.RequestCtx) {
+	ctx.SetContentType("application/json")
+	ctx.SetStatusCode(fasthttp.StatusOK)
+}
 
 func NewServer(config *Config) (*Server, error) {
 	server := &Server{
@@ -24,6 +29,8 @@ func NewServer(config *Config) (*Server, error) {
 }
 func NewRouter() *router.Router {
 	router := router.New()
+	router.GET("/", middleware.ReponseMiddlwareAndLogger(Index))
+
 	return router
 }
 

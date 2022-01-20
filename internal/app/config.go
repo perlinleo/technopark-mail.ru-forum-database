@@ -27,7 +27,7 @@ type Config struct {
 }
 
 func NewConfig() *Config {
-	viper.SetConfigFile("/home/pierrelean/technopark-mail.ru-forum-database/config.json")
+	viper.SetConfigFile("config.json")
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(err)
