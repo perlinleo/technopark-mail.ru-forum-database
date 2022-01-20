@@ -16,7 +16,7 @@ type ThreadUsecase struct {
 
 func (t ThreadUsecase) Vote(threadSlugOrId string, vote *model.Vote) (*model.Thread, error) {
 	threadObj, err := t.FindByIdOrSlug(threadSlugOrId)
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (t ThreadUsecase) Vote(threadSlugOrId string, vote *model.Vote) (*model.Thr
 }
 
 func (t ThreadUsecase) GetThreadPosts(threadSlugOrId string, limit string, desc bool, since string, sort string) ([]model.Post, error) {
-	threadObj, err := t.FindByIdOrSlug(threadSlugOrId) 
+	threadObj, err := t.FindByIdOrSlug(threadSlugOrId)
 	if err != nil {
 		return nil, err
 	}
@@ -38,17 +38,16 @@ func (t ThreadUsecase) GetThreadPosts(threadSlugOrId string, limit string, desc 
 	if limit == "" {
 		limit = "100"
 	}
-	descValue :=  ""
-	if desc==true {
+	descValue := ""
+	if desc {
 		descValue = "desc"
 	}
 
-	// mb cringe 
-	
-	if sort=="" {
+	// mb cringe
+
+	if sort == "" {
 		sort = "flat"
 	}
-	
 
 	posts, err := t.threadRep.GetThreadPosts(threadObj, limit, descValue, since, sort)
 	if err != nil {
@@ -66,15 +65,15 @@ func (t ThreadUsecase) UpdateThread(threadSlugOrId string, threadUpdate *model.T
 		return nil, err
 	}
 
-	if threadUpdate.Title=="" && threadUpdate.Message=="" {
+	if threadUpdate.Title == "" && threadUpdate.Message == "" {
 		return threadObj, nil
 	}
 
-	if threadUpdate.Title=="" {
+	if threadUpdate.Title == "" {
 		threadUpdate.Title = threadObj.Title
 	}
 
-	if threadUpdate.Message=="" {
+	if threadUpdate.Message == "" {
 		threadUpdate.Message = threadObj.Message
 	}
 
@@ -122,60 +121,18 @@ func NewThreadUsecase(t thread.Repository, u user.Repository) thread.Usecase {
 	}
 }
 
-func makeTree(posts []model.Post) []model.Post {
-	tree := make([]model.Post, 0)
-	var parent *model.Post
-
-	for _, p := range posts {
-		if len(p.Path) == 1 {
-			tree = append(tree, p)
-			parent = &p
-		} else if len(p.Path) > 1 {
-			if p.Parent == parent.ID {
-				//parent.Childs = append(parent.Childs, p)
-				tree = append(tree, p)
-				p.ParentPointer = parent
-				parent = &p
-			} else {
-				for p.Parent != parent.ID {
-					parent = parent.ParentPointer
-				}
-				//parent.Childs = append(parent.Childs, p)
-				tree = append(tree, p)
-				p.ParentPointer = parent
-				parent = &p
-			}
-		}
-	}
-
-	return tree
-}
-
-
-func (t ThreadUsecase) FindPostId(id string, includeUser bool,includeForum bool, includeThread bool) (*model.PostFull, error) {
-	
-	
+func (t ThreadUsecase) FindPostId(id string, includeUser bool, includeForum bool, includeThread bool) (*model.PostFull, error) {
 
 	postObj, err := t.threadRep.FindPostId(id, includeUser, includeForum, includeThread)
 
 	if err != nil {
-		
+
 		return nil, errors.Wrap(err, "postRep.FindById()")
 	}
 
 	return postObj, nil
 }
 
-
-func contains(arr []string, str string) bool {
-	for _, a := range arr {
-		if a == str {
-			return true
-		}
-	}
-
-	return false
-}
 
 
 func (t ThreadUsecase) UpdatePost(id string, message string) (*model.Post, error) {
@@ -184,7 +141,7 @@ func (t ThreadUsecase) UpdatePost(id string, message string) (*model.Post, error
 		return nil, errors.Wrap(err, "postRep.FindById()")
 	}
 
-	if message=="" || postFullObj.Post.Message == message {
+	if message == "" || postFullObj.Post.Message == message {
 		return postFullObj.Post, nil
 	}
 
@@ -196,7 +153,6 @@ func (t ThreadUsecase) UpdatePost(id string, message string) (*model.Post, error
 
 	return postObj, nil
 }
-
 
 func (t ThreadUsecase) ClearAll() error {
 	err := t.threadRep.ClearAll()

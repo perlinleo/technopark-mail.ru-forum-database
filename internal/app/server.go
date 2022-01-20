@@ -5,8 +5,6 @@ import (
 
 	router "github.com/fasthttp/router"
 	"github.com/jackc/pgx"
-	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/middleware"
-	"github.com/valyala/fasthttp"
 )
 
 type Server struct {
@@ -14,30 +12,25 @@ type Server struct {
 	Config *Config
 }
 
-func Index(ctx *fasthttp.RequestCtx){
-	ctx.SetContentType("application/json")
-	ctx.SetStatusCode(fasthttp.StatusOK)
-}
+
 
 func NewServer(config *Config) (*Server, error) {
-	server:= &Server{
+	server := &Server{
 		Router: NewRouter(),
 		Config: config,
 	}
 
 	return server, nil
 }
-func NewRouter() (*router.Router) {
-	router:= router.New()
-	router.GET("/", middleware.ReponseMiddlwareAndLogger(Index))
-
-	return router;
+func NewRouter() *router.Router {
+	router := router.New()
+	return router
 }
 
-func NewDataBase(connectionString string) (*pgx.ConnPool, error){
+func NewDataBase(connectionString string) (*pgx.ConnPool, error) {
 	fmt.Println(connectionString)
 	pgxConn, err := pgx.ParseConnectionString(connectionString)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	pgxConn.PreferSimpleProtocol = true
@@ -48,16 +41,14 @@ func NewDataBase(connectionString string) (*pgx.ConnPool, error){
 		AcquireTimeout: 0,
 	}
 
-
 	connPool, err := pgx.NewConnPool(config)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	return connPool, nil
 
 }
 
-
 func (s *Server) ConfigurateServer(pgx.ConnPool) {
-	
+
 }

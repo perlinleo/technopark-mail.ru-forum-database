@@ -5,13 +5,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-
 func main() {
-	log.Error().Msgf(app.Start().Error());
+	log.Error().Msgf(app.Start().Error())
 }
 
-
-
 func init() {
-	
+
 }

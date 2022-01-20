@@ -17,13 +17,13 @@ type DataBaseConfig struct {
 
 type AppConfig struct {
 	SessionKey  string
-	Port 	    string
+	Port        string
 	DatabaseURL string
 }
 
 type Config struct {
 	App *AppConfig
-	DB  *DataBaseConfig 
+	DB  *DataBaseConfig
 }
 
 func NewConfig() *Config {
@@ -46,19 +46,19 @@ func NewConfig() *Config {
 
 	connection := fmt.Sprintf(
 		"host=%s dbname=%s sslmode=disable port=%s password=%s user=%s",
-		 dbHost, dbName, dbPort, dbPass, dbUser)
+		dbHost, dbName, dbPort, dbPass, dbUser)
 	return &Config{
-		DB : &DataBaseConfig{
+		DB: &DataBaseConfig{
 			host: dbHost,
 			port: dbPort,
 			user: dbUser,
 			pass: dbPass,
 			name: dbName,
 		},
-		App : &AppConfig{
-			SessionKey: "dsdsdsds",
+		App: &AppConfig{
+			SessionKey:  "dsdsdsds",
 			DatabaseURL: connection,
-			Port: appPort,
+			Port:        appPort,
 		},
 	}
 }

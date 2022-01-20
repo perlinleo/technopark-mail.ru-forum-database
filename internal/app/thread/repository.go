@@ -11,8 +11,6 @@ type Repository interface {
 	Vote(thread *model.Thread, vote *model.Vote) (*model.Thread, error)
 	FindPostId(id string, includeUser, includeForum, includeThread bool) (*model.PostFull, error)
 	UpdatePost(id string, message string) (*model.Post, error)
-	GetStatus() (*model.Status, error) 
+	GetStatus() (*model.Status, error)
 	ClearAll() error
-	
 }
-

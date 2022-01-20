@@ -10,24 +10,24 @@ import (
 )
 
 type ForumPSQL struct {
-	Conn *pgx.ConnPool
+	Conn  *pgx.ConnPool
 	Cache *cache.Cache
 }
 
 func NewForumPSQLRepository(ConnectionPool *pgx.ConnPool, Cache *cache.Cache) forum.Repository {
 	return &ForumPSQL{
-			ConnectionPool, 
-			Cache}
+		ConnectionPool,
+		Cache}
 }
 
-func (r ForumPSQL) FindForumUsers(forumObj *model.Forum, descValue bool, limitValue string,sinceValue string) ([]model.User, error) {
+func (r ForumPSQL) FindForumUsers(forumObj *model.Forum, descValue bool, limitValue string, sinceValue string) ([]model.User, error) {
 	limit := "100"
 	if limitValue != "" {
 		limit = limitValue
 	}
 	sinceConditionSign := ">"
 	desc := ""
-	if descValue == true {
+	if descValue {
 		desc = "desc"
 		sinceConditionSign = "<"
 	}
@@ -65,9 +65,7 @@ func (r ForumPSQL) FindForumUsers(forumObj *model.Forum, descValue bool, limitVa
 	return users, nil
 }
 
-
-
-func (r ForumPSQL) Create(forum *model.Forum) error{
+func (r ForumPSQL) Create(forum *model.Forum) error {
 	return r.Conn.QueryRow(
 		"INSERT INTO forums (slug, title, usernick) "+
 			"VALUES ($1, $2, $3) RETURNING slug, title, usernick, posts, threads",
@@ -144,8 +142,6 @@ func (r ForumPSQL) FindForumThreads(forumSlug string, limitValue string, descVal
 
 		threads = append(threads, t)
 	}
-
-	
 
 	return threads, nil
 }

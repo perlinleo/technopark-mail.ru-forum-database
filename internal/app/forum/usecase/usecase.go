@@ -9,22 +9,22 @@ import (
 )
 
 type ForumUsecase struct {
-	repositoryForum forum.Repository
-	repositoryUser user.Repository
+	repositoryForum  forum.Repository
+	repositoryUser   user.Repository
 	repositoryThread thread.Repository
-	Cache     *cache.Cache
+	Cache            *cache.Cache
 }
 
 func NewForumUsecase(repositoryForum forum.Repository, repositoryThread thread.Repository, repositoryUser user.Repository, cache *cache.Cache) forum.Usecase {
 	return &ForumUsecase{
-		repositoryForum: repositoryForum,
+		repositoryForum:  repositoryForum,
 		repositoryThread: repositoryThread,
-		repositoryUser: repositoryUser,
-		Cache: cache,
+		repositoryUser:   repositoryUser,
+		Cache:            cache,
 	}
 }
 
-func (f ForumUsecase) CreateForum(data *model.Forum) (*model.Forum, int, error){
+func (f ForumUsecase) CreateForum(data *model.Forum) (*model.Forum, int, error) {
 	userObj, err := f.repositoryUser.FindByNickname(data.User)
 	if userObj == nil || err != nil {
 		return nil, 404, err
@@ -43,17 +43,17 @@ func (f ForumUsecase) CreateForum(data *model.Forum) (*model.Forum, int, error){
 
 	return data, 201, nil
 }
-func (f ForumUsecase) Find(slug string) (*model.Forum, error){
+func (f ForumUsecase) Find(slug string) (*model.Forum, error) {
 	var forumObj *model.Forum
 	var err error
 	forumObj, err = f.repositoryForum.Find(slug)
-		if err != nil {
-			return nil, err
-		}
-		f.Cache.Set(slug, forumObj, cache.DefaultExpiration)
+	if err != nil {
+		return nil, err
+	}
+	f.Cache.Set(slug, forumObj, cache.DefaultExpiration)
 	// fromCache, found := f.Cache.Get(slug)
 	// if !found {
-		
+
 	// } else {
 	// 	fmt.Println("USING CACHE")
 	// 	forumObj = fromCache.(*model.Forum)
@@ -61,7 +61,7 @@ func (f ForumUsecase) Find(slug string) (*model.Forum, error){
 
 	return forumObj, nil
 }
-func (f ForumUsecase) CreateThread(slug string,newThread *model.NewThread) (*model.Thread, int, error) {
+func (f ForumUsecase) CreateThread(slug string, newThread *model.NewThread) (*model.Thread, int, error) {
 	userObj, err := f.repositoryUser.FindByNickname(newThread.Author)
 	if userObj == nil || err != nil {
 		return nil, 404, err
@@ -92,7 +92,7 @@ func (f ForumUsecase) GetUsersByForum(slug string, limitValue string, descValue 
 		return nil, 404, err
 	}
 
-	users, err := f.repositoryForum.FindForumUsers(forumObj,descValue,limitValue,sinceValue)
+	users, err := f.repositoryForum.FindForumUsers(forumObj, descValue, limitValue, sinceValue)
 	if err != nil {
 		return nil, 404, err
 	}

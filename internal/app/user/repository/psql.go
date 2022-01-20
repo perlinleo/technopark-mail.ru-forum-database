@@ -8,43 +8,41 @@ import (
 )
 
 type UserPSQL struct {
-	Conn *pgx.ConnPool
+	Conn  *pgx.ConnPool
 	Cache *cache.Cache
 }
 
 func NewUserPSQLRepository(ConnectionPool *pgx.ConnPool, Cache *cache.Cache) user.Repository {
 	return &UserPSQL{
-			ConnectionPool, 
-			Cache}
+		ConnectionPool,
+		Cache}
 }
 
 func (userRep *UserPSQL) Create(user *model.User) error {
-	query := "INSERT INTO users (nickname, email, about, fullname) "+
-			"VALUES ($1, $2, $3, $4) RETURNING nickname"
+	query := "INSERT INTO users (nickname, email, about, fullname) " +
+		"VALUES ($1, $2, $3, $4) RETURNING nickname"
 	_, err := userRep.Conn.Exec(
-		query, user.Nickname, user.Email, user.About, user.Fullname,)
-	
+		query, user.Nickname, user.Email, user.About, user.Fullname)
+
 	return err
 }
-
 
 func (userRep *UserPSQL) FindByNickname(nickname string) (*model.User, error) {
 	userObj := &model.User{}
 
 	if err := userRep.Conn.QueryRow(
-			"SELECT nickname, about, email, fullname FROM users WHERE nickname = $1",
-			nickname,
-		).Scan(
-			&userObj.Nickname,
-			&userObj.About,
-			&userObj.Email,
-			&userObj.Fullname,
-		); err != nil {
-			return nil, err
-		}
+		"SELECT nickname, about, email, fullname FROM users WHERE nickname = $1",
+		nickname,
+	).Scan(
+		&userObj.Nickname,
+		&userObj.About,
+		&userObj.Email,
+		&userObj.Fullname,
+	); err != nil {
+		return nil, err
+	}
 	return userObj, nil
 }
-
 
 func (u *UserPSQL) Update(user *model.User) (*model.User, error) {
 	_, err := u.Conn.Exec(
@@ -57,21 +55,24 @@ func (u *UserPSQL) Update(user *model.User) (*model.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return user, nil
 }
 
-func (u *UserPSQL) Find(nickname string, email string) ([]model.User, error){
+func (u *UserPSQL) Find(nickname string, email string) ([]model.User, error) {
 	var users []model.User
-	rows,err := u.Conn.Query(`SELECT nickname, about,email, fullname FROM users 
-		WHERE nickname = $1 OR email = $2`, nickname,email)
+	rows, err := u.Conn.Query(`SELECT nickname, about,email, fullname FROM users 
+		WHERE nickname = $1 OR email = $2`, nickname, email)
 	if err != nil {
 		return nil, err
 	}
-	for rows.Next(){
+	for rows.Next() {
 		obj := model.User{}
-		rows.Scan(&obj.Nickname, &obj.About, &obj.Email, &obj.Fullname)
+		err:= rows.Scan(&obj.Nickname, &obj.About, &obj.Email, &obj.Fullname)
+		if err!=nil{
+			return nil, err
+		}
 		users = append(users, obj)
 	}
-	return users,nil
+	return users, nil
 }

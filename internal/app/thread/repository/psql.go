@@ -14,29 +14,27 @@ import (
 )
 
 type ThreadPSQL struct {
-	Conn *pgx.ConnPool
+	Conn  *pgx.ConnPool
 	Cache *cache.Cache
 }
 
-
 func NewThreadPSQLRepository(ConnectionPool *pgx.ConnPool, Cache *cache.Cache) thread.Repository {
 	return &ThreadPSQL{
-			ConnectionPool, 
-			Cache}
+		ConnectionPool,
+		Cache}
 }
 
-
 func (t ThreadPSQL) Vote(thread *model.Thread, vote *model.Vote) (*model.Thread, error) {
-	_ ,err := t.Conn.Exec("INSERT INTO votes(nickname, voice, thread) VALUES ($1, $2, $3) ON CONFLICT ON CONSTRAINT votes_pkey DO UPDATE SET voice = $2",
-	 vote.Nickname, vote.Voice, thread.ID)
+	_, err := t.Conn.Exec("INSERT INTO votes(nickname, voice, thread) VALUES ($1, $2, $3) ON CONFLICT ON CONSTRAINT votes_pkey DO UPDATE SET voice = $2",
+		vote.Nickname, vote.Voice, thread.ID)
 	if err != nil {
 		return nil, err
 	}
-	var value int32;
-	err = t.Conn.QueryRow("SELECT votes FROM threads WHERE id = $1", thread.ID).Scan(	&value )
-	thread.Votes = value;
+	var value int32
+	err = t.Conn.QueryRow("SELECT votes FROM threads WHERE id = $1", thread.ID).Scan(&value)
+	thread.Votes = value
 	t.Cache.Delete(thread.Slug)
-	return thread , nil
+	return thread, nil
 }
 
 func (t ThreadPSQL) GetThreadPosts(thread *model.Thread, limit, desc, since, sort string) ([]model.Post, error) {
@@ -151,7 +149,7 @@ func (t ThreadPSQL) CreatePosts(thread *model.Thread, posts []*model.Post) ([]*m
 
 		if post.Parent == 0 {
 			sqlStr += "(nextval('posts_id_seq'::regclass), ?, ?, ?, ?, ?, ?, " +
-				"ARRAY[currval(pg_get_serial_sequence('posts', 'id'))::bigint]),"
+				"ARRAY[currval(pg_get_serial_sequence('posts', 'id'))::integer]),"
 			vals = append(vals, post.Parent, thread.ID, thread.Forum, post.Author, now, post.Message)
 		} else {
 			var parentThreadId int32
@@ -169,7 +167,7 @@ func (t ThreadPSQL) CreatePosts(thread *model.Thread, posts []*model.Post) ([]*m
 
 			sqlStr += " (nextval('posts_id_seq'::regclass), ?, ?, ?, ?, ?, ?, " +
 				"(SELECT path FROM posts WHERE id = ? AND thread = ?) || " +
-				"currval(pg_get_serial_sequence('posts', 'id'))::bigint),"
+				"currval(pg_get_serial_sequence('posts', 'id'))::integer),"
 
 			vals = append(vals, post.Parent, thread.ID, thread.Forum, post.Author, now, post.Message, post.Parent, thread.ID)
 		}
@@ -206,7 +204,10 @@ func (t ThreadPSQL) CreatePosts(thread *model.Thread, posts []*model.Post) ([]*m
 			i += 1
 
 			if err != nil {
-				tx.Rollback()
+				err := tx.Rollback()
+				if err!=nil{
+					return nil, err
+				}
 				return nil, err
 			}
 		}
@@ -256,7 +257,7 @@ func (t ThreadPSQL) CreateThread(newThread *model.NewThread) (*model.Thread, err
 			newThread.Slug,
 		)
 	} else {
-		 
+
 		query := "INSERT INTO threads (title, message, forum, author, slug, created) " +
 			"VALUES ($1, $2, $3, $4, $5, $6) RETURNING slug, title, message, forum, author, created, votes, id"
 		row = t.Conn.QueryRow(
@@ -335,8 +336,6 @@ func (t ThreadPSQL) FindByIdOrSlug(id int, slug string) (*model.Thread, error) {
 
 	return th, nil
 }
-
-
 
 func ReplaceSQL(old, searchPattern string) string {
 	tmpCount := strings.Count(old, searchPattern)
@@ -440,7 +439,6 @@ func (t ThreadPSQL) FindPostId(id string, includeUser, includeForum, includeThre
 	return postObj, nil
 }
 
-
 func (t ThreadPSQL) UpdatePost(id string, message string) (*model.Post, error) {
 	postObj := &model.Post{}
 
@@ -467,7 +465,6 @@ func (t ThreadPSQL) UpdatePost(id string, message string) (*model.Post, error) {
 	return postObj, nil
 }
 
-
 func (t ThreadPSQL) ClearAll() error {
 	if _, err := t.Conn.Exec("TRUNCATE votes, users, posts, threads, forums RESTART IDENTITY CASCADE"); err != nil {
 		return err
@@ -480,12 +477,14 @@ func (t ThreadPSQL) GetStatus() (*model.Status, error) {
 	status := &model.Status{}
 
 	//mb cringe
-	if err := t.Conn.QueryRow("SELECT "+
+	err := t.Conn.QueryRow("SELECT "+
 		"(SELECT count(*) from forums) AS forum, "+
 		"(SELECT count(*) from posts) AS post, "+
 		"(SELECT count(*) from threads) AS thread, "+
 		"(SELECT count(*) from users) AS user",
-	).Scan(&status.Forum, &status.Post, &status.Thread, &status.User); err != nil {
+	).Scan(&status.Forum, &status.Post, &status.Thread, &status.User)
+
+	if err != nil {
 		return nil, err
 	}
 

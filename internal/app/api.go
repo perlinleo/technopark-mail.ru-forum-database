@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	router "github.com/fasthttp/router"
 	"github.com/patrickmn/go-cache"
 	user_psql "github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/user/repository"
 
@@ -21,43 +22,47 @@ import (
 	user_http "github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/user/delivery"
 )
 
-
+func Index(ctx *fasthttp.RequestCtx) {
+	fmt.Println("sdss")
+	ctx.SetContentType("application/json")
+	ctx.SetStatusCode(fasthttp.StatusOK)
+}
 
 func Start() error {
 	config := NewConfig()
 
-	server, err := NewServer(config)
-	if err !=nil {
+	_, err := NewServer(config)
+	if err != nil {
 		return err
 	}
-	ConnPool , err := NewDataBase(config.App.DatabaseURL)
-	if err !=nil {
+	ConnPool, err := NewDataBase(config.App.DatabaseURL)
+	if err != nil {
 		return err
 	}
-
-	userCache := cache.New(time.Minute,time.Minute)
-	userRepository := user_psql.NewUserPSQLRepository(ConnPool,userCache)
-	forumCache := cache.New(time.Minute,time.Minute)
-	forumRepository := forum_psql.NewForumPSQLRepository(ConnPool,forumCache)
-	threadCache := cache.New(time.Minute,time.Minute)
-	threadRepository := thread_psql.NewThreadPSQLRepository(ConnPool,threadCache)
-	forumUsecaseCache := cache.New(time.Minute,time.Minute)
-
-
-
+	router := router.New()
+	userCache := cache.New(time.Minute, time.Minute)
+	userRepository := user_psql.NewUserPSQLRepository(ConnPool, userCache)
+	forumCache := cache.New(time.Minute, time.Minute)
+	forumRepository := forum_psql.NewForumPSQLRepository(ConnPool, forumCache)
+	threadCache := cache.New(time.Minute, time.Minute)
+	threadRepository := thread_psql.NewThreadPSQLRepository(ConnPool, threadCache)
+	forumUsecaseCache := cache.New(time.Minute, time.Minute)
+	router.GET("/",middleware.ReponseMiddlwareAndLogger(Index))
+	router.GET("/api/",middleware.ReponseMiddlwareAndLogger(Index))
 	threadUsecase := thread_usecase.NewThreadUsecase(threadRepository, userRepository)
 	userUsecase := user_usecase.NewUserUsecase(userRepository)
-	forumUsecase := forum_usecase.NewForumUsecase(forumRepository,threadRepository,userRepository,forumUsecaseCache)
+	forumUsecase := forum_usecase.NewForumUsecase(forumRepository, threadRepository, userRepository, forumUsecaseCache)
 
-	user_http.NewUserHandler(server.Router, userUsecase)
-	forum_http.NewForumHandler(server.Router, forumUsecase)
-	thread_http.NewThreadHandler(server.Router, threadUsecase)
-
+	user_http.NewUserHandler(router, userUsecase)
+	forum_http.NewForumHandler(router, forumUsecase)
+	thread_http.NewThreadHandler(router, threadUsecase)
+	
+	
 	fmt.Printf("STARTING SERVICE ON PORT %s\n", config.App.Port)
-	err = fasthttp.ListenAndServe(config.App.Port,middleware.ReponseMiddlwareAndLogger(server.Router.Handler))
+	err = fasthttp.ListenAndServe(config.App.Port, middleware.ReponseMiddlwareAndLogger(router.Handler))
 	if err != nil {
-		return err;
+		return err
 	}
 
-	return nil;
+	return nil
 }

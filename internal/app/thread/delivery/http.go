@@ -15,44 +15,43 @@ type ThreadHandler struct {
 	ThreadUsecase thread.Usecase
 }
 
-
 func NewThreadHandler(router *router.Router, u thread.Usecase) {
 	handler := &ThreadHandler{
 		ThreadUsecase: u,
 	}
 
-	router.POST("/thread/{slug}/create",  middleware.ReponseMiddlwareAndLogger(handler.HandleCreatePosts))
-	router.GET("/thread/{slug}/details",  middleware.ReponseMiddlwareAndLogger(handler.HandleGetThreadDetails))
-	router.POST("/thread/{slug}/details", middleware.ReponseMiddlwareAndLogger(handler.HandleUpdateThreadDetails))
-	router.GET("/thread/{slug}/posts",  middleware.ReponseMiddlwareAndLogger(handler.HandleGetThreadPosts))
-	router.POST("/thread/{slug}/vote",  middleware.ReponseMiddlwareAndLogger(handler.HandleVoteForThread))
-	router.GET("/post/{id}/details",  middleware.ReponseMiddlwareAndLogger(handler.HandleGetPostDetails))
-	router.POST("/post/{id}/details",  middleware.ReponseMiddlwareAndLogger(handler.HandleUpdatePost))
+	router.POST("/api/thread/{slug}/create", middleware.ReponseMiddlwareAndLogger(handler.CreatePosts))
+	router.GET("/api/thread/{slug}/details", middleware.ReponseMiddlwareAndLogger(handler.GetThreadDetails))
+	router.POST("/api/thread/{slug}/details", middleware.ReponseMiddlwareAndLogger(handler.UpdateThreadDetails))
+	router.GET("/api/thread/{slug}/posts", middleware.ReponseMiddlwareAndLogger(handler.GetThreadPosts))
+	router.POST("/api/thread/{slug}/vote", middleware.ReponseMiddlwareAndLogger(handler.VoteForThread))
+	router.GET("/api/post/{id}/details", middleware.ReponseMiddlwareAndLogger(handler.GetPostDetails))
+	router.POST("/api/post/{id}/details", middleware.ReponseMiddlwareAndLogger(handler.UpdatePost))
 
-	router.POST("/service/clear", middleware.ReponseMiddlwareAndLogger(handler.HandleServiceClear))
-	router.GET("/service/status", middleware.ReponseMiddlwareAndLogger(handler.HandleServiceGetStatus))
+	router.POST("/api/service/clear", middleware.ReponseMiddlwareAndLogger(handler.ServiceClear))
+	router.GET("/api/service/status", middleware.ReponseMiddlwareAndLogger(handler.ServiceGetStatus))
 }
 
-func (h *ThreadHandler) HandleCreatePosts(ctx *fasthttp.RequestCtx) {
+func (h *ThreadHandler) CreatePosts(ctx *fasthttp.RequestCtx) {
 	slug := ctx.UserValue("slug").(string)
 
 	newPosts := new([]*model.Post)
 
 	err := json.Unmarshal(ctx.PostBody(), &newPosts)
-	
+
 	if err != nil {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
 
 	posts, code, err := h.ThreadUsecase.CreatePosts(slug, *newPosts)
-	
+
 	if err != nil {
 		// fmt.Println(err)
 		// ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 
 		// if string(err.Error()) == "Parent post was created in another thread" {
-			
+
 		// }
 		if string(err.Error()) == "404" {
 			response := map[string]string{"message": "Can't find post author by nickname: "}
@@ -61,7 +60,7 @@ func (h *ThreadHandler) HandleCreatePosts(ctx *fasthttp.RequestCtx) {
 			ctx.SetStatusCode(fasthttp.StatusNotFound)
 			return
 		}
-		if string(err.Error()) == "no rows in result set" && code!= 409 {
+		if string(err.Error()) == "no rows in result set" && code != 409 {
 			response := map[string]string{"message": "Can't find post thread by id: 2139800939"}
 			ctxBody, _ := json.Marshal(response)
 			ctx.SetBody(ctxBody)
@@ -76,23 +75,23 @@ func (h *ThreadHandler) HandleCreatePosts(ctx *fasthttp.RequestCtx) {
 	}
 
 	ctx.SetStatusCode(code)
-	
-	ctxBody , err:= json.Marshal(posts)
+
+	ctxBody, err := json.Marshal(posts)
 
 	if err != nil {
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
 		return
 	}
-	
+
 	ctx.SetBody(ctxBody)
 
 }
 
-func (h *ThreadHandler) HandleGetThreadDetails(ctx *fasthttp.RequestCtx) {
+func (h *ThreadHandler) GetThreadDetails(ctx *fasthttp.RequestCtx) {
 	slug := ctx.UserValue("slug").(string)
 
 	threadObj, err := h.ThreadUsecase.FindByIdOrSlug(slug)
-	
+
 	if err != nil {
 		// mb kringe
 		response := map[string]string{"message": "Can't find user by nickname:  "}
@@ -102,23 +101,23 @@ func (h *ThreadHandler) HandleGetThreadDetails(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	ctxBody , err:= json.Marshal(threadObj)
+	ctxBody, err := json.Marshal(threadObj)
 
 	if err != nil {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 	}
-	
+
 	ctx.SetBody(ctxBody)
 	ctx.SetStatusCode(fasthttp.StatusOK)
 }
 
-func (h *ThreadHandler) HandleUpdateThreadDetails(ctx *fasthttp.RequestCtx) {
+func (h *ThreadHandler) UpdateThreadDetails(ctx *fasthttp.RequestCtx) {
 	slug := ctx.UserValue("slug").(string)
 
 	thread := new(model.ThreadUpdate)
 
 	err := json.Unmarshal(ctx.PostBody(), &thread)
-	
+
 	if err != nil {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
@@ -133,34 +132,33 @@ func (h *ThreadHandler) HandleUpdateThreadDetails(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	ctxBody , err:= json.Marshal(threadObj)
+	ctxBody, err := json.Marshal(threadObj)
 
 	if err != nil {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
-	
+
 	ctx.SetBody(ctxBody)
 	ctx.SetStatusCode(fasthttp.StatusOK)
 }
 
-func (h *ThreadHandler) HandleGetThreadPosts(ctx *fasthttp.RequestCtx) {
+func (h *ThreadHandler) GetThreadPosts(ctx *fasthttp.RequestCtx) {
 	slug := ctx.UserValue("slug").(string)
 	args := ctx.QueryArgs()
-	
+
 	var limitValue string
 	var descValue bool
 	var sinceValue string
 	var sortValue string
 
 	limitValue = string(args.Peek("limit"))
-	if string(args.Peek("desc")) == "true"{
+	if string(args.Peek("desc")) == "true" {
 		descValue = true
 	}
 	sinceValue = string(args.Peek("since"))
 	sortValue = string(args.Peek("sort"))
 	posts, err := h.ThreadUsecase.GetThreadPosts(slug, limitValue, descValue, sinceValue, sortValue)
-
 
 	if err != nil {
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
@@ -170,19 +168,19 @@ func (h *ThreadHandler) HandleGetThreadPosts(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	ctxBody , err:= json.Marshal(posts)
+	ctxBody, err := json.Marshal(posts)
 
 	if err != nil {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
-	
+
 	ctx.SetBody(ctxBody)
 	ctx.SetStatusCode(fasthttp.StatusOK)
 
 }
 
-func (h *ThreadHandler) HandleVoteForThread(ctx *fasthttp.RequestCtx) {
+func (h *ThreadHandler) VoteForThread(ctx *fasthttp.RequestCtx) {
 	slug := ctx.UserValue("slug").(string)
 	vote := new(model.Vote)
 
@@ -191,8 +189,7 @@ func (h *ThreadHandler) HandleVoteForThread(ctx *fasthttp.RequestCtx) {
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
 	}
 
-
-	threadObj ,err := h.ThreadUsecase.Vote(slug, vote)
+	threadObj, err := h.ThreadUsecase.Vote(slug, vote)
 
 	if err != nil {
 
@@ -211,7 +208,7 @@ func (h *ThreadHandler) HandleVoteForThread(ctx *fasthttp.RequestCtx) {
 	ctx.SetStatusCode(fasthttp.StatusOK)
 }
 
-func (h *ThreadHandler) HandleUpdatePost(ctx *fasthttp.RequestCtx) {
+func (h *ThreadHandler) UpdatePost(ctx *fasthttp.RequestCtx) {
 	id := ctx.UserValue("id").(string)
 	newPost := new(model.Post)
 	err := json.Unmarshal(ctx.PostBody(), &newPost)
@@ -226,8 +223,8 @@ func (h *ThreadHandler) HandleUpdatePost(ctx *fasthttp.RequestCtx) {
 		// respond.Error(w, r, http.StatusNotFound, errors.New("Can't find post with id "+id+"\n"))
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
 		response := map[string]string{"message": "Can't find post author by nickname: "}
-			ctxBody, _ := json.Marshal(response)
-			ctx.SetBody(ctxBody)
+		ctxBody, _ := json.Marshal(response)
+		ctx.SetBody(ctxBody)
 		return
 	}
 
@@ -250,7 +247,7 @@ func contains(arr []string, str string) bool {
 	return false
 }
 
-func (h *ThreadHandler) HandleGetPostDetails(ctx *fasthttp.RequestCtx) {
+func (h *ThreadHandler) GetPostDetails(ctx *fasthttp.RequestCtx) {
 	id := ctx.UserValue("id").(string)
 	args := ctx.QueryArgs()
 	var includeUser bool
@@ -270,13 +267,13 @@ func (h *ThreadHandler) HandleGetPostDetails(ctx *fasthttp.RequestCtx) {
 			includeThread = true
 		}
 	}
-	postObj, err := h.ThreadUsecase.FindPostId(id,includeUser,includeForum,includeThread)
-	if err != nil || postObj == nil  {
+	postObj, err := h.ThreadUsecase.FindPostId(id, includeUser, includeForum, includeThread)
+	if err != nil || postObj == nil {
 		// respond.Error(w, r, http.StatusNotFound, errors.New("Can't find post with id "+id+"\n"))
 		// mb kringe
-		
+
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
-		
+
 		response := map[string]string{"message": "Can't find user by nickname:  "}
 		ctxBody, _ := json.Marshal(response)
 		ctx.SetBody(ctxBody)
@@ -289,16 +286,9 @@ func (h *ThreadHandler) HandleGetPostDetails(ctx *fasthttp.RequestCtx) {
 	}
 	ctx.SetBody(ctxBody)
 	ctx.SetStatusCode(fasthttp.StatusOK)
-
-	// !!!!!
-	// Я ХОЧУ УМРЕРЕТЬ
-	// ПЕТЯ Я СЕЙЧАС УМРУ
-	// ПЕТЯ Я СЕЙЧАС СДОХНУ
-
-	// respond.Respond(w, r, http.StatusOK, postObj)
 }
 
-func (h *ThreadHandler) HandleServiceClear(ctx *fasthttp.RequestCtx) {
+func (h *ThreadHandler) ServiceClear(ctx *fasthttp.RequestCtx) {
 
 	err := h.ThreadUsecase.ClearAll()
 
@@ -310,7 +300,7 @@ func (h *ThreadHandler) HandleServiceClear(ctx *fasthttp.RequestCtx) {
 	ctx.SetStatusCode(fasthttp.StatusOK)
 }
 
-func (h *ThreadHandler) HandleServiceGetStatus(ctx *fasthttp.RequestCtx) {
+func (h *ThreadHandler) ServiceGetStatus(ctx *fasthttp.RequestCtx) {
 
 	status, err := h.ThreadUsecase.GetStatus()
 
@@ -318,7 +308,7 @@ func (h *ThreadHandler) HandleServiceGetStatus(ctx *fasthttp.RequestCtx) {
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
 		return
 	}
-	ctxBody,err:= json.Marshal(status)
+	ctxBody, err := json.Marshal(status)
 	ctx.SetBody(ctxBody)
 	ctx.SetStatusCode(fasthttp.StatusOK)
 }
