@@ -46,11 +46,16 @@ func (f ForumUsecase) CreateForum(data *model.Forum) (*model.Forum, int, error) 
 func (f ForumUsecase) Find(slug string) (*model.Forum, error) {
 	var forumObj *model.Forum
 	var err error
-	forumObj, err = f.repositoryForum.Find(slug)
-	if err != nil {
-		return nil, err
+	fromCache, found := f.Cache.Get(slug)
+	if !found {
+		forumObj, err = f.repositoryForum.Find(slug)
+		if err != nil {
+			return nil, err
+		}
+		f.Cache.Set(slug, forumObj, cache.DefaultExpiration)
+	} else {
+		forumObj = fromCache.(*model.Forum)
 	}
-	f.Cache.Set(slug, forumObj, cache.DefaultExpiration)
 	return forumObj, nil
 }
 func (f ForumUsecase) CreateThread(slug string, newThread *model.NewThread) (*model.Thread, int, error) {
