@@ -19,7 +19,6 @@ func NewForumHandler(router *router.Router, usecase forum.Usecase) {
 	handler := &ForumHandler{
 		ForumUsecase: usecase,
 	}
-
 	router.POST("/api/forum/create", middleware.ReponseMiddlwareAndLogger(handler.CreateForum))
 	router.POST("/api/forum/{slug}/create", middleware.ReponseMiddlwareAndLogger(handler.CreateThread))
 	router.GET("/api/forum/{slug}/details", middleware.ReponseMiddlwareAndLogger(handler.GetDetails))
@@ -29,8 +28,7 @@ func NewForumHandler(router *router.Router, usecase forum.Usecase) {
 
 func (h *ForumHandler) CreateForum(ctx *fasthttp.RequestCtx) {
 	newForum := new(model.Forum)
-	// err := json.Unmarshal(ctx.PostBody(), &newForum)
-	err := newForum.UnmarshalJSON(ctx.PostBody())
+	err := json.Unmarshal(ctx.PostBody(), &newForum)
 	if err != nil {
 		responses.SendError(ctx, err, fasthttp.StatusInternalServerError)
 		return
@@ -69,21 +67,12 @@ func (h *ForumHandler) CreateThread(ctx *fasthttp.RequestCtx) {
 	}
 	ctx.SetBody(ctx.PostBody())
 	threadObj, code, err := h.ForumUsecase.CreateThread(slug, newThread)
-	// if code == http.StatusNotFound {
-	// 	responses.SendError(ctx, err, fasthttp.StatusNotFound)
-	// 	return
-	// }
+
 	ctxBody, err := json.Marshal(threadObj)
 	if err == nil {
 		ctx.SetBody(ctxBody)
 	}
-	// if err != nil {
-	// 	responses.SendError(ctx, err, fasthttp.StatusInternalServerError)
-	// }
-	// if code == http.StatusConflict {
-	// 	responses.SendError(ctx, err, fasthttp.StatusConflict)
-	// 	return
-	// }
+	
 	ctx.SetStatusCode(code)
 }
 

@@ -51,14 +51,6 @@ func (f ForumUsecase) Find(slug string) (*model.Forum, error) {
 		return nil, err
 	}
 	f.Cache.Set(slug, forumObj, cache.DefaultExpiration)
-	// fromCache, found := f.Cache.Get(slug)
-	// if !found {
-
-	// } else {
-	// 	fmt.Println("USING CACHE")
-	// 	forumObj = fromCache.(*model.Forum)
-	// }
-
 	return forumObj, nil
 }
 func (f ForumUsecase) CreateThread(slug string, newThread *model.NewThread) (*model.Thread, int, error) {

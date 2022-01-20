@@ -47,12 +47,7 @@ func (h *ThreadHandler) CreatePosts(ctx *fasthttp.RequestCtx) {
 	posts, code, err := h.ThreadUsecase.CreatePosts(slug, *newPosts)
 
 	if err != nil {
-		// fmt.Println(err)
-		// ctx.SetStatusCode(fasthttp.StatusInternalServerError)
-
-		// if string(err.Error()) == "Parent post was created in another thread" {
-
-		// }
+		
 		if string(err.Error()) == "404" {
 			response := map[string]string{"message": "Can't find post author by nickname: "}
 			ctxBody, _ := json.Marshal(response)
@@ -93,7 +88,6 @@ func (h *ThreadHandler) GetThreadDetails(ctx *fasthttp.RequestCtx) {
 	threadObj, err := h.ThreadUsecase.FindByIdOrSlug(slug)
 
 	if err != nil {
-		// mb kringe
 		response := map[string]string{"message": "Can't find user by nickname:  "}
 		ctxBody, _ := json.Marshal(response)
 		ctx.SetBody(ctxBody)
@@ -124,7 +118,6 @@ func (h *ThreadHandler) UpdateThreadDetails(ctx *fasthttp.RequestCtx) {
 	}
 	threadObj, err := h.ThreadUsecase.UpdateThread(slug, thread)
 	if err != nil {
-		// mb kringe
 		response := map[string]string{"message": "Can't find user by nickname:  "}
 		ctxBody, _ := json.Marshal(response)
 		ctx.SetBody(ctxBody)
@@ -220,7 +213,6 @@ func (h *ThreadHandler) UpdatePost(ctx *fasthttp.RequestCtx) {
 	postObj, err := h.ThreadUsecase.UpdatePost(id, newPost.Message)
 
 	if err != nil || postObj == nil {
-		// respond.Error(w, r, http.StatusNotFound, errors.New("Can't find post with id "+id+"\n"))
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
 		response := map[string]string{"message": "Can't find post author by nickname: "}
 		ctxBody, _ := json.Marshal(response)
@@ -269,8 +261,7 @@ func (h *ThreadHandler) GetPostDetails(ctx *fasthttp.RequestCtx) {
 	}
 	postObj, err := h.ThreadUsecase.FindPostId(id, includeUser, includeForum, includeThread)
 	if err != nil || postObj == nil {
-		// respond.Error(w, r, http.StatusNotFound, errors.New("Can't find post with id "+id+"\n"))
-		// mb kringe
+		
 
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
 

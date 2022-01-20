@@ -8,7 +8,3 @@ import (
 func main() {
 	log.Error().Msgf(app.Start().Error())
 }
-
-func init() {
-
-}

@@ -91,9 +91,7 @@ func (t ThreadPSQL) GetThreadPosts(thread *model.Thread, limit, desc, since, sor
 		posts = append(posts, p)
 	}
 
-	//t.cache.Set(key, posts, cache2.DefaultExpiration)
-	//}
-
+	
 	return posts, nil
 }
 
@@ -122,7 +120,6 @@ func (t ThreadPSQL) UpdateThread(id int, slug string, threadUpdate *model.Thread
 	}
 
 	t.Cache.Set(th.Slug, th, cache.DefaultExpiration)
-	//t.cache.Delete("thread_" + fmt.Sprint(th.ID))
 
 	return th, nil
 }
@@ -179,8 +176,7 @@ func (t ThreadPSQL) CreatePosts(thread *model.Thread, posts []*model.Post) ([]*m
 
 	sqlStr = ReplaceSQL(sqlStr, "?")
 	if len(posts) > 0 {
-		// mb kringe
-		// stmtButch, err := tx.Prepare("name1", sqlStr)
+	
 		if err != nil {
 			return nil, err
 		}
@@ -331,7 +327,7 @@ func (t ThreadPSQL) FindByIdOrSlug(id int, slug string) (*model.Thread, error) {
 			return nil, err
 		}
 
-		//t.cache.Delete("thread_" + fmt.Sprint(th.ID))
+		
 	}
 
 	return th, nil
@@ -415,9 +411,7 @@ func (t ThreadPSQL) FindPostId(id string, includeUser, includeForum, includeThre
 	if includeThread {
 		postObj.Thread = &model.Thread{}
 
-		//if x, found := p.cache.Get("thread_"+fmt.Sprint(postObj.Post.Thread)); found {
-		//	postObj.Thread = x.(*model.Thread)
-		//} else {
+		
 		if err := t.Conn.QueryRow(
 			"SELECT forum, slug, title, author, message, id, created, votes FROM threads WHERE id = $1",
 			postObj.Post.Thread,
@@ -433,7 +427,7 @@ func (t ThreadPSQL) FindPostId(id string, includeUser, includeForum, includeThre
 		); err != nil {
 			return nil, err
 		}
-		//}
+		
 	}
 
 	return postObj, nil
@@ -476,7 +470,6 @@ func (t ThreadPSQL) ClearAll() error {
 func (t ThreadPSQL) GetStatus() (*model.Status, error) {
 	status := &model.Status{}
 
-	//mb cringe
 	err := t.Conn.QueryRow("SELECT "+
 		"(SELECT count(*) from forums) AS forum, "+
 		"(SELECT count(*) from posts) AS post, "+

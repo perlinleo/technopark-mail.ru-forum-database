@@ -2,7 +2,6 @@ package user_http
 
 import (
 	"encoding/json"
-	"net/http"
 
 	"github.com/fasthttp/router"
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/user"
@@ -41,7 +40,6 @@ func (h *UserHandler) HandleCreateUser(ctx *fasthttp.RequestCtx) {
 
 	users, err := h.UserUsecase.CreateUser(newUser)
 	if err != nil {
-		// pgerr, _ := err.(pgx.PgError);
 		users, err = h.UserUsecase.DuplicateUser(newUser)
 		
 		ctxBody, err := json.Marshal(users)
@@ -74,7 +72,7 @@ func (h *UserHandler) HandleCreateUser(ctx *fasthttp.RequestCtx) {
 func (h *UserHandler) HandleGetUser(ctx *fasthttp.RequestCtx) {
 	nickname := ctx.UserValue("nickname").(string)
 	userObj, err := h.UserUsecase.Find(nickname)
-	ctx.SetStatusCode(http.StatusOK)
+	ctx.SetStatusCode(fasthttp.StatusOK)
 	if err != nil || userObj == nil {
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
 	}
@@ -104,6 +102,5 @@ func (h *UserHandler) HandleUpdateUser(ctx *fasthttp.RequestCtx) {
 	ctx.SetBody(ctxBody)
 	ctx.SetStatusCode(code)
 
-	// newUser.Nickname = nickname
-	// newUser, err, code := h.UserUsecase.Update(newUser)
+	
 }

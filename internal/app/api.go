@@ -33,17 +33,16 @@ func Start() error {
 		return err
 	}
 
-	userCache := cache.New(time.Minute, time.Minute)
+	userCache := cache.New(5*time.Minute, 10*time.Minute)
 	userRepository := user_psql.NewUserPSQLRepository(ConnPool, userCache)
-	forumCache := cache.New(time.Minute, time.Minute)
-	forumRepository := forum_psql.NewForumPSQLRepository(ConnPool, forumCache)
-	threadCache := cache.New(time.Minute, time.Minute)
-	threadRepository := thread_psql.NewThreadPSQLRepository(ConnPool, threadCache)
-	forumUsecaseCache := cache.New(time.Minute, time.Minute)
+	
+	forumRepository := forum_psql.NewForumPSQLRepository(ConnPool, userCache)
+	
+	threadRepository := thread_psql.NewThreadPSQLRepository(ConnPool, userCache)
 
 	threadUsecase := thread_usecase.NewThreadUsecase(threadRepository, userRepository)
 	userUsecase := user_usecase.NewUserUsecase(userRepository)
-	forumUsecase := forum_usecase.NewForumUsecase(forumRepository, threadRepository, userRepository, forumUsecaseCache)
+	forumUsecase := forum_usecase.NewForumUsecase(forumRepository, threadRepository, userRepository, userCache)
 	router := router.New()
 	user_http.NewUserHandler(router, userUsecase)
 	forum_http.NewForumHandler(router, forumUsecase)

@@ -61,18 +61,26 @@ func (u *UserPSQL) Update(user *model.User) (*model.User, error) {
 
 func (u *UserPSQL) Find(nickname string, email string) ([]model.User, error) {
 	var users []model.User
-	rows, err := u.Conn.Query(`SELECT nickname, about,email, fullname FROM users 
-		WHERE nickname = $1 OR email = $2`, nickname, email)
-	if err != nil {
-		return nil, err
-	}
-	for rows.Next() {
-		obj := model.User{}
-		err:= rows.Scan(&obj.Nickname, &obj.About, &obj.Email, &obj.Fullname)
-		if err!=nil{
+	if x, found := u.Cache.Get(nickname); found {
+		userObj := x.(*model.User)
+		users = append(users, *userObj)
+	} else if x, found := u.Cache.Get(nickname); found {
+		userObj := x.(*model.User)
+		users = append(users, *userObj)
+	} else {
+		rows, err := u.Conn.Query(`SELECT nickname, about,email, fullname FROM users 
+			WHERE nickname = $1 OR email = $2`, nickname, email)
+		if err != nil {
 			return nil, err
 		}
-		users = append(users, obj)
+		for rows.Next() {
+			obj := model.User{}
+			err:= rows.Scan(&obj.Nickname, &obj.About, &obj.Email, &obj.Fullname)
+			if err!=nil{
+				return nil, err
+			}
+			users = append(users, obj)
+		}
 	}
 	return users, nil
 }

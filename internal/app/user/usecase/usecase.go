@@ -37,11 +37,7 @@ func (u UserUsecase) Find(nickname string) (*model.User, error) {
 }
 
 func (u UserUsecase) Update(user *model.User) (*model.User, error, int) {
-	// userObj, err := u.repository.FindByNickname(user.Nickname)
-
-	// if err != nil || userObj == nil {
-	// 	return nil, err, 404
-	// }
+	
 
 	userObj, err := u.repository.FindByNickname(user.Nickname)
 

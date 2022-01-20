@@ -1,21 +1,6 @@
 SET SYNCHRONOUS_COMMIT = 'off';
 create extension if not exists citext;
-DROP INDEX IF EXISTS idx_users_email_uindex;
-DROP INDEX IF EXISTS idx_posts_path;
-DROP INDEX IF EXISTS idx_posts_thread;
-DROP INDEX IF EXISTS idx_posts_thread_id;
-DROP INDEX IF EXISTS idx_forums_slug_uindex;
-DROP INDEX IF EXISTS idx_forums_userNick_unique;
-
-DROP INDEX IF EXISTS idx_users_nickname_uindex;
-
-DROP INDEX IF EXISTS idx_posts_forum;
-DROP INDEX IF EXISTS idx_posts_parent;
-DROP INDEX IF EXISTS idx_threads_slug;
 DROP INDEX IF EXISTS idx_threads_forum;
-
-
-
 DROP TABLE IF EXISTS forum_users;
 DROP TABLE IF EXISTS users CASCADE;
 CREATE UNLOGGED TABLE IF NOT EXISTS users
@@ -38,23 +23,17 @@ CREATE UNLOGGED TABLE IF NOT EXISTS forums
     threads  int default 0
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_uindex2
-    ON users (email);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_nickname_uindex2
-    ON users (nickname);
+DROP INDEX IF EXISTS idx_users_email;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users (email);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_nickname ON users (nickname);
 
 DROP TABLE IF EXISTS posts;
 DROP TABLE IF EXISTS votes;
-
-
-CREATE INDEX IF NOT EXISTS idx_users_pok
-    ON users (nickname, email, fullname, about);
-
-
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_forums_slug_uindex2
-    ON forums (slug);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_forums_userNick_unique2
+CREATE INDEX IF NOT EXISTS idx_users_pok ON users (nickname, email, fullname, about);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_forums_slug ON forums (slug);
+DROP INDEX IF EXISTS idx_posts_path;
+DROP INDEX IF EXISTS idx_users_nickname_user;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_forums_nickname_user
     ON forums (userNick);
 
 
@@ -71,17 +50,12 @@ CREATE UNLOGGED TABLE IF NOT EXISTS threads
     created timestamptz DEFAULT now()
 );
 
-
-CREATE INDEX IF NOT EXISTS idx_threads_slug2
-    ON threads (slug);
-CREATE INDEX IF NOT EXISTS idx_threads_forum2
-    ON threads (forum);
-CREATE INDEX IF NOT EXISTS idx_threads_pok
-    ON threads (id, forum, author, slug, created, title, message, votes);
-CREATE INDEX IF NOT EXISTS idx_threads_created
-    ON threads (created);
-CREATE INDEX IF NOT EXISTS idx_threads_created2
-    ON threads (created, forum);
+DROP INDEX IF EXISTS idx_threads_slug;
+CREATE INDEX IF NOT EXISTS idx_threads_slug ON threads (slug);
+CREATE INDEX IF NOT EXISTS idx_threads_forum2 ON threads (forum);
+CREATE INDEX IF NOT EXISTS idx_threads_pok ON threads (id, forum, author, slug, created, title, message, votes);
+CREATE INDEX IF NOT EXISTS idx_threads_created ON threads (created);
+CREATE INDEX IF NOT EXISTS idx_threads_created ON threads (created, forum);
 
 CREATE UNLOGGED TABLE IF NOT EXISTS posts
 (
@@ -95,14 +69,17 @@ CREATE UNLOGGED TABLE IF NOT EXISTS posts
     isEdited bool               DEFAULT FALSE,
     message  text
 );
+DROP INDEX IF EXISTS idx_posts_path;
 CREATE INDEX IF NOT EXISTS idx_posts_path ON posts USING GIN (path);
-CREATE INDEX IF NOT EXISTS idx_posts_pok
-    ON posts (id, parent, thread, forum, author, created, message, isedited, path);
+CREATE INDEX IF NOT EXISTS idx_posts_pok ON posts (id, parent, thread, forum, author, created, message, isedited, path);
+DROP INDEX IF EXISTS idx_posts_forum;
 CREATE INDEX IF NOT EXISTS idx_posts_forum ON posts (forum);
+DROP INDEX IF EXISTS idx_posts_parent;
 CREATE INDEX IF NOT EXISTS idx_posts_parent ON posts (parent);
-CREATE INDEX IF NOT EXISTS idx_posts_created
-    ON posts (created);
+CREATE INDEX IF NOT EXISTS idx_posts_created ON posts (created);
+DROP INDEX IF EXISTS idx_posts_thread_id;
 CREATE INDEX IF NOT EXISTS idx_posts_thread_id ON posts (thread, id);
+DROP INDEX IF EXISTS idx_posts_thread;
 CREATE INDEX IF NOT EXISTS idx_posts_thread ON posts (thread);
 
 
@@ -179,23 +156,25 @@ CREATE INDEX idx_forum_users_user_id_forum_id
 CREATE OR REPLACE FUNCTION forum_users_update()
     RETURNS TRIGGER AS '
     BEGIN
---         INSERT INTO forum_users (user_id, forum_id) VALUES ((SELECT id FROM users WHERE LOWER(NEW.author) = LOWER(nickname)),
---                                                               (SELECT id FROM forums WHERE LOWER(NEW.forum) = LOWER(slug)));
         INSERT INTO forum_users (user_id, forum_id) VALUES ((SELECT id FROM users WHERE NEW.author = nickname),
                                                             (SELECT id FROM forums WHERE NEW.forum = slug));
         RETURN NULL;
     END;
 ' LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS on_thread_insert ON threads;
+CREATE TRIGGER on_thread_insert
+    AFTER INSERT ON threads
+    FOR EACH ROW EXECUTE PROCEDURE forum_users_update();
+
+DROP TRIGGER IF EXISTS on_post_insert ON votes;
 CREATE TRIGGER on_post_insert
     AFTER INSERT ON posts
     FOR EACH ROW EXECUTE PROCEDURE forum_users_update();
 
-CREATE TRIGGER on_thread_insert
-    AFTER INSERT ON threads
-    FOR EACH ROW EXECUTE PROCEDURE forum_users_update();
+
     
 CLUSTER users USING users_nickname_key;
-CLUSTER threads USING idx_threads_created2;
-CLUSTER forums USING idx_forums_slug_uindex2;
+CLUSTER threads USING idx_threads_created;
+CLUSTER forums USING idx_forums_slug;
 CLUSTER posts USING idx_posts_thread_id;

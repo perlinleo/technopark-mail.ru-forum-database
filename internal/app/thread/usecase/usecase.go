@@ -43,7 +43,6 @@ func (t ThreadUsecase) GetThreadPosts(threadSlugOrId string, limit string, desc 
 		descValue = "desc"
 	}
 
-	// mb cringe
 
 	if sort == "" {
 		sort = "flat"
