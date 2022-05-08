@@ -3,8 +3,14 @@ package responses
 import (
 	"encoding/json"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/valyala/fasthttp"
 )
+
+type PromMetrics struct {
+	Hits    *prometheus.CounterVec
+	Timings *prometheus.HistogramVec
+}
 
 func SendError(ctx *fasthttp.RequestCtx, errorMessage error, statusCode int) {
 	ctx.SetStatusCode(statusCode)

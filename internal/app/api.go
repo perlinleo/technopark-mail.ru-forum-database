@@ -6,10 +6,11 @@ import (
 
 	router "github.com/fasthttp/router"
 	"github.com/patrickmn/go-cache"
-	user_psql "github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/user/repository"
-
 	forum_psql "github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/forum/repository"
 	thread_psql "github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/thread/repository"
+	user_psql "github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/user/repository"
+	responses "github.com/perlinleo/technopark-mail.ru-forum-database/internal/pkg"
+	"github.com/prometheus/client_golang/prometheus"
 
 	forum_usecase "github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/forum/usecase"
 	thread_usecase "github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/thread/usecase"
@@ -22,6 +23,22 @@ import (
 )
 
 func Start() error {
+
+	var metrics responses.PromMetrics
+
+	metrics.Hits = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "hits",
+	}, []string{"status", "path", "method"})
+
+	metrics.Timings = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: "timings",
+		},
+		[]string{"status", "path", "method"},
+	)
+
+	prometheus.MustRegister(metrics.Hits, metrics.Timings)
+	
 	config := NewConfig()
 
 	_, err := NewServer(config)
@@ -44,9 +61,9 @@ func Start() error {
 	userUsecase := user_usecase.NewUserUsecase(userRepository)
 	forumUsecase := forum_usecase.NewForumUsecase(forumRepository, threadRepository, userRepository, userCache)
 	router := router.New()
-	user_http.NewUserHandler(router, userUsecase)
-	forum_http.NewForumHandler(router, forumUsecase)
-	thread_http.NewThreadHandler(router, threadUsecase)
+	user_http.NewUserHandler(router, userUsecase,&metrics)
+	forum_http.NewForumHandler(router, forumUsecase,&metrics)
+	thread_http.NewThreadHandler(router, threadUsecase,&metrics)
 	
 	
 	fmt.Printf("STARTING SERVICE ON PORT %s\n", config.App.Port)

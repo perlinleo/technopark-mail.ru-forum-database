@@ -5,7 +5,6 @@ import (
 
 	router "github.com/fasthttp/router"
 	"github.com/jackc/pgx"
-	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/middleware"
 	"github.com/valyala/fasthttp"
 )
 
@@ -29,7 +28,7 @@ func NewServer(config *Config) (*Server, error) {
 }
 func NewRouter() *router.Router {
 	router := router.New()
-	router.GET("/", middleware.ReponseMiddlwareAndLogger(Index))
+	// router.GET("/", middleware.ReponseMiddlwareAndLogger(Index, metrics))
 
 	return router
 }

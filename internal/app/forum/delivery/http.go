@@ -15,15 +15,15 @@ type ForumHandler struct {
 	ForumUsecase forum.Usecase
 }
 
-func NewForumHandler(router *router.Router, usecase forum.Usecase) {
+func NewForumHandler(router *router.Router, usecase forum.Usecase,metrics *responses.PromMetrics) {
 	handler := &ForumHandler{
 		ForumUsecase: usecase,
 	}
-	router.POST("/api/forum/create", middleware.ReponseMiddlwareAndLogger(handler.CreateForum))
-	router.POST("/api/forum/{slug}/create", middleware.ReponseMiddlwareAndLogger(handler.CreateThread))
-	router.GET("/api/forum/{slug}/details", middleware.ReponseMiddlwareAndLogger(handler.GetDetails))
-	router.GET("/api/forum/{slug}/threads", middleware.ReponseMiddlwareAndLogger(handler.GetThreads))
-	router.GET("/api/forum/{slug}/users", middleware.ReponseMiddlwareAndLogger(handler.GetUsers))
+	router.POST("/api/forum/create", middleware.ReponseMiddlwareAndLogger(handler.CreateForum,metrics))
+	router.POST("/api/forum/{slug}/create", middleware.ReponseMiddlwareAndLogger(handler.CreateThread,metrics))
+	router.GET("/api/forum/{slug}/details", middleware.ReponseMiddlwareAndLogger(handler.GetDetails,metrics))
+	router.GET("/api/forum/{slug}/threads", middleware.ReponseMiddlwareAndLogger(handler.GetThreads,metrics))
+	router.GET("/api/forum/{slug}/users", middleware.ReponseMiddlwareAndLogger(handler.GetUsers,metrics))
 }
 
 func (h *ForumHandler) CreateForum(ctx *fasthttp.RequestCtx) {
