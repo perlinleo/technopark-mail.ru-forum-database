@@ -8,6 +8,7 @@ import (
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/thread"
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/middleware"
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/model"
+	responses "github.com/perlinleo/technopark-mail.ru-forum-database/internal/pkg"
 	"github.com/valyala/fasthttp"
 )
 
@@ -15,21 +16,21 @@ type ThreadHandler struct {
 	ThreadUsecase thread.Usecase
 }
 
-func NewThreadHandler(router *router.Router, u thread.Usecase) {
+func NewThreadHandler(router *router.Router, u thread.Usecase,metrics* responses.PromMetrics) {
 	handler := &ThreadHandler{
 		ThreadUsecase: u,
 	}
 
-	router.POST("/api/thread/{slug}/create", middleware.ReponseMiddlwareAndLogger(handler.CreatePosts))
-	router.GET("/api/thread/{slug}/details", middleware.ReponseMiddlwareAndLogger(handler.GetThreadDetails))
-	router.POST("/api/thread/{slug}/details", middleware.ReponseMiddlwareAndLogger(handler.UpdateThreadDetails))
-	router.GET("/api/thread/{slug}/posts", middleware.ReponseMiddlwareAndLogger(handler.GetThreadPosts))
-	router.POST("/api/thread/{slug}/vote", middleware.ReponseMiddlwareAndLogger(handler.VoteForThread))
-	router.GET("/api/post/{id}/details", middleware.ReponseMiddlwareAndLogger(handler.GetPostDetails))
-	router.POST("/api/post/{id}/details", middleware.ReponseMiddlwareAndLogger(handler.UpdatePost))
+	router.POST("/api/thread/{slug}/create", middleware.ReponseMiddlwareAndLogger(handler.CreatePosts,metrics))
+	router.GET("/api/thread/{slug}/details", middleware.ReponseMiddlwareAndLogger(handler.GetThreadDetails,metrics))
+	router.POST("/api/thread/{slug}/details", middleware.ReponseMiddlwareAndLogger(handler.UpdateThreadDetails,metrics))
+	router.GET("/api/thread/{slug}/posts", middleware.ReponseMiddlwareAndLogger(handler.GetThreadPosts,metrics))
+	router.POST("/api/thread/{slug}/vote", middleware.ReponseMiddlwareAndLogger(handler.VoteForThread,metrics))
+	router.GET("/api/post/{id}/details", middleware.ReponseMiddlwareAndLogger(handler.GetPostDetails,metrics))
+	router.POST("/api/post/{id}/details", middleware.ReponseMiddlwareAndLogger(handler.UpdatePost,metrics))
 
-	router.POST("/api/service/clear", middleware.ReponseMiddlwareAndLogger(handler.ServiceClear))
-	router.GET("/api/service/status", middleware.ReponseMiddlwareAndLogger(handler.ServiceGetStatus))
+	router.POST("/api/service/clear", middleware.ReponseMiddlwareAndLogger(handler.ServiceClear,metrics))
+	router.GET("/api/service/status", middleware.ReponseMiddlwareAndLogger(handler.ServiceGetStatus,metrics))
 }
 
 func (h *ThreadHandler) CreatePosts(ctx *fasthttp.RequestCtx) {

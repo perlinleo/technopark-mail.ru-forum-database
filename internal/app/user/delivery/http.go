@@ -9,6 +9,7 @@ import (
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/middleware"
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/model"
 	responses "github.com/perlinleo/technopark-mail.ru-forum-database/internal/pkg"
+
 	"github.com/valyala/fasthttp"
 )
 
@@ -16,14 +17,14 @@ type UserHandler struct {
 	UserUsecase user.Usecase
 }
 
-func NewUserHandler(router *router.Router, usecase user.Usecase) {
+func NewUserHandler(router *router.Router, usecase user.Usecase,metrics* responses.PromMetrics) {
 	handler := &UserHandler{
 		UserUsecase: usecase,
 	}
 
-	router.POST("/api/user/{nickname}/create", middleware.ReponseMiddlwareAndLogger(handler.HandleCreateUser))
-	router.GET("/api/user/{nickname}/profile", middleware.ReponseMiddlwareAndLogger(handler.HandleGetUser))
-	router.POST("/api/user/{nickname}/profile", middleware.ReponseMiddlwareAndLogger(handler.HandleUpdateUser))
+	router.POST("/api/user/{nickname}/create", middleware.ReponseMiddlwareAndLogger(handler.HandleCreateUser,metrics))
+	router.GET("/api/user/{nickname}/profile", middleware.ReponseMiddlwareAndLogger(handler.HandleGetUser,metrics))
+	router.POST("/api/user/{nickname}/profile", middleware.ReponseMiddlwareAndLogger(handler.HandleUpdateUser,metrics))
 
 }
 
