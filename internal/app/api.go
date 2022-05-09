@@ -36,7 +36,7 @@ func Start() error {
 		},
 		[]string{"status", "path", "method"},
 	)
-	metrics.Requests = 0;
+	metrics.Requests = new(int64);
 
 	prometheus.MustRegister(metrics.Hits, metrics.Timings)
 	
