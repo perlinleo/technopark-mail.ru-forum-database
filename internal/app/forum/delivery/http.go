@@ -30,10 +30,7 @@ func NewForumHandler(router *router.Router, usecase forum.Usecase,metrics *respo
 
 
 func (h *ForumHandler) Metrics(ctx *fasthttp.RequestCtx) {
-	ctxString := `
-	# HELP hits 
-	# TYPE hits counter
-	hits `
+	ctxString := "# HELP hits\n# TYPE hits counter\n hits "
 	counterVal := strconv.Itoa(int(ctx.UserValue("requests").(int64)));
 	ctxString += counterVal;
 	ctxBody := []byte(ctxString)
