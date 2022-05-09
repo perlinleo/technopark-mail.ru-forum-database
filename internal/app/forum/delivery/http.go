@@ -29,7 +29,13 @@ func NewForumHandler(router *router.Router, usecase forum.Usecase,metrics *respo
 
 
 func (h *ForumHandler) Metrics(ctx *fasthttp.RequestCtx) {
-	ctxBody := []byte("dokjasdoiassadjkaso ")
+	ctxString := `
+	# HELP hits 
+	# TYPE hits counter
+	hits `
+	counterVal := ctx.UserValue("requests").(string);
+	ctxString += counterVal;
+	ctxBody := []byte(ctxString)
 	ctx.SetBody(ctxBody)
 	ctx.SetStatusCode(200)
 }
