@@ -24,7 +24,16 @@ func NewForumHandler(router *router.Router, usecase forum.Usecase,metrics *respo
 	router.GET("/api/forum/{slug}/details", middleware.ReponseMiddlwareAndLogger(handler.GetDetails,metrics))
 	router.GET("/api/forum/{slug}/threads", middleware.ReponseMiddlwareAndLogger(handler.GetThreads,metrics))
 	router.GET("/api/forum/{slug}/users", middleware.ReponseMiddlwareAndLogger(handler.GetUsers,metrics))
+	router.GET("/metrics", middleware.ReponseMiddlwareAndLogger(handler.Metrics,metrics))
 }
+
+
+func (h *ForumHandler) Metrics(ctx *fasthttp.RequestCtx) {
+	ctxBody := []byte("dokjasdoiassadjkaso ")
+	ctx.SetBody(ctxBody)
+	ctx.SetStatusCode(200)
+}
+
 
 func (h *ForumHandler) CreateForum(ctx *fasthttp.RequestCtx) {
 	newForum := new(model.Forum)
