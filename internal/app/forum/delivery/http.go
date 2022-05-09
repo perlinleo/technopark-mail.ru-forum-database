@@ -2,6 +2,7 @@ package forum_http
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/fasthttp/router"
 	"github.com/perlinleo/technopark-mail.ru-forum-database/internal/app/forum"
@@ -33,7 +34,7 @@ func (h *ForumHandler) Metrics(ctx *fasthttp.RequestCtx) {
 	# HELP hits 
 	# TYPE hits counter
 	hits `
-	counterVal := ctx.UserValue("requests").(string);
+	counterVal := strconv.Itoa(int(ctx.UserValue("requests").(int64)));
 	ctxString += counterVal;
 	ctxBody := []byte(ctxString)
 	ctx.SetBody(ctxBody)
