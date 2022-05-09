@@ -10,6 +10,7 @@ import (
 type PromMetrics struct {
 	Hits    *prometheus.CounterVec
 	Timings *prometheus.HistogramVec
+	Requests *int64
 }
 
 func SendError(ctx *fasthttp.RequestCtx, errorMessage error, statusCode int) {
