@@ -15,9 +15,9 @@ func ReponseMiddlwareAndLogger(next fasthttp.RequestHandler, metrics *responses.
 		log.Printf("METHOD %s REMOTEADDR %s URL %s", ctx.Method(), ctx.RemoteAddr(), ctx.RequestURI())
 		elapsed := time.Since(start)
 		log.Printf("Time spent %s", elapsed)
-		ctx.SetUserValue("requests", *metrics.Requests)
-		*metrics.Requests+=1;
-		log.Printf("Requests total %s",string(rune(*metrics.Requests)))
+		ctx.SetUserValue("requests", metrics.Requests)
+		metrics.Requests+=1;
+		log.Printf("Requests total %s",string(rune(metrics.Requests)))
 		next(ctx)
 	}
 }
